@@ -1,7 +1,6 @@
 'use client'
 
 import { useTheme } from '@/hooks/useTheme'
-import { themes } from '@/lib/themes'
 import ThemeSelector from '@/components/ThemeSelector'
 
 interface ThemedPageProps {
@@ -9,7 +8,7 @@ interface ThemedPageProps {
 }
 
 export default function ThemedPage({ children }: ThemedPageProps) {
-  const { currentTheme, changeTheme } = useTheme()
+  const { theme: currentTheme, setTheme: changeTheme, themes } = useTheme()
   const theme = themes[currentTheme]
 
   return (

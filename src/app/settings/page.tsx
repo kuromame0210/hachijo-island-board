@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTheme } from '@/hooks/useTheme'
 import { useLocation } from '@/hooks/useLocation'
+import { ThemeName } from '@/lib/themes'
 
 export default function SettingsPage() {
   const { theme, setTheme, themes } = useTheme()
@@ -14,9 +15,12 @@ export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true)
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [showImages, setShowImages] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   // ローカルストレージから設定を読み込み
   useEffect(() => {
+    setIsHydrated(true)
+
     const savedViewMode = localStorage.getItem('viewMode') as 'list' | 'grid'
     const savedNotifications = localStorage.getItem('notifications')
     const savedAutoRefresh = localStorage.getItem('autoRefresh')
@@ -88,7 +92,7 @@ export default function SettingsPage() {
                 {Object.entries(themes).map(([key, themeData]) => (
                   <button
                     key={key}
-                    onClick={() => setTheme(key)}
+                    onClick={() => setTheme(key as ThemeName)}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       theme === key
                         ? 'border-blue-500 ring-2 ring-blue-200'
@@ -97,23 +101,19 @@ export default function SettingsPage() {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: themeData.primary }}
+                        className={`w-4 h-4 rounded-full bg-${themeData.colors.primary}`}
                       />
                       <span className="text-sm font-medium">{themeData.name}</span>
                     </div>
                     <div className="flex gap-1">
                       <div
-                        className="w-3 h-3 rounded"
-                        style={{ backgroundColor: themeData.primary }}
+                        className={`w-3 h-3 rounded bg-${themeData.colors.primary}`}
                       />
                       <div
-                        className="w-3 h-3 rounded"
-                        style={{ backgroundColor: themeData.secondary }}
+                        className={`w-3 h-3 rounded bg-${themeData.colors.secondary}`}
                       />
                       <div
-                        className="w-3 h-3 rounded"
-                        style={{ backgroundColor: themeData.accent }}
+                        className={`w-3 h-3 rounded bg-${themeData.colors.accent}`}
                       />
                     </div>
                   </button>

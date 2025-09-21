@@ -1,26 +1,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ThemeName, defaultTheme } from '@/lib/themes'
+import { ThemeName, defaultTheme, themes } from '@/lib/themes'
 
 export function useTheme() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>(defaultTheme)
+  const [theme, setTheme] = useState<ThemeName>(defaultTheme)
 
   useEffect(() => {
     // ローカルストレージからテーマを読み込み
     const savedTheme = localStorage.getItem('hachijo-theme') as ThemeName
     if (savedTheme && ['ocean', 'nature', 'geothermal', 'sunset', 'community'].includes(savedTheme)) {
-      setCurrentTheme(savedTheme)
+      setTheme(savedTheme)
     }
   }, [])
 
-  const changeTheme = (theme: ThemeName) => {
-    setCurrentTheme(theme)
-    localStorage.setItem('hachijo-theme', theme)
+  const changeTheme = (newTheme: ThemeName) => {
+    setTheme(newTheme)
+    localStorage.setItem('hachijo-theme', newTheme)
   }
 
   return {
-    currentTheme,
-    changeTheme
+    theme,
+    setTheme: changeTheme,
+    themes
   }
 }

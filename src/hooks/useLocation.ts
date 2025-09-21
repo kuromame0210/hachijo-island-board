@@ -14,6 +14,7 @@ export function useLocation() {
 
   const [hasAskedPermission, setHasAskedPermission] = useState(false)
   const [hasConfirmedLocation, setHasConfirmedLocation] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   // 位置情報を取得する関数
   const requestLocation = async () => {
@@ -36,7 +37,7 @@ export function useLocation() {
       }
 
       // 開発環境での位置情報テスト用（localhost時）
-      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      if (window.location.hostname === 'localhost') {
         console.log('開発環境検出：テスト位置情報を使用')
         const testLocation = {
           lat: 33.1067, // 八丈島中心
@@ -101,6 +102,9 @@ export function useLocation() {
 
   // 初回ロード時にキャッシュされた位置情報をチェック
   useEffect(() => {
+    // hydration完了を示すフラグ
+    setIsHydrated(true)
+
     const cached = localStorage.getItem('hachijo-location-status')
     if (cached) {
       try {
@@ -130,7 +134,7 @@ export function useLocation() {
   return {
     locationResult,
     requestLocation,
-    hasAskedPermission,
+    hasAskedPermission: isHydrated ? hasAskedPermission : false, // SSR中は常にfalse
     isLoading: locationResult.status === 'loading'
   }
 }
