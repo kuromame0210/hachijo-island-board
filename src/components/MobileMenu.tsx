@@ -95,31 +95,18 @@ export default function MobileMenu() {
                   <span className="text-xl">📍</span>
                   <span className="font-medium">位置情報</span>
                 </a>
-                <a
-                  href="/settings"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <span className="text-xl">⚙️</span>
-                  <span className="font-medium">設定</span>
-                </a>
 
-                {/* 投稿リンク（制限表示付き） */}
-                <a
-                  href="/new"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isIslander
-                      ? 'text-white bg-blue-600 hover:bg-blue-700'
-                      : 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                  }`}
-                  onClick={() => {
-                    if (isIslander) setIsOpen(false)
-                  }}
-                >
-                  <span className="text-xl">✍️</span>
-                  <span className="font-medium">投稿する</span>
-                  {!isIslander && <span className="text-xs">🔒</span>}
-                </a>
+                {/* 投稿リンク（島民限定） */}
+                {isIslander && (
+                  <a
+                    href="/new"
+                    className="flex items-center gap-3 px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span className="text-xl">✍️</span>
+                    <span className="font-medium">投稿する</span>
+                  </a>
+                )}
               </nav>
 
               {/* カテゴリ別リンク */}
@@ -134,21 +121,16 @@ export default function MobileMenu() {
                     <span>🏠</span>
                     <span>不動産</span>
                   </Link>
-                  <a
-                    href={isIslander ? "/?category=仕事" : "#"}
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm ${
-                      isIslander
-                        ? 'text-gray-600 hover:bg-gray-50'
-                        : 'text-gray-400 cursor-not-allowed'
-                    }`}
-                    onClick={() => {
-                      if (isIslander) setIsOpen(false)
-                    }}
-                  >
-                    <span>💼</span>
-                    <span>仕事</span>
-                    {!isIslander && <span className="text-xs">🔒</span>}
-                  </a>
+                  {isIslander && (
+                    <a
+                      href="/?category=仕事"
+                      className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span>💼</span>
+                      <span>仕事</span>
+                    </a>
+                  )}
                   <Link
                     href="/?category=不用品"
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
@@ -160,17 +142,6 @@ export default function MobileMenu() {
                 </div>
               </div>
 
-              {/* 位置制限の説明 */}
-              {!isIslander && (
-                <div className="mt-8 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-sm font-medium text-blue-800 mb-1">
-                    📍 位置確認で全機能解放
-                  </div>
-                  <div className="text-xs text-blue-600">
-                    八丈島内からアクセスすると全ての機能をご利用いただけます
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </>

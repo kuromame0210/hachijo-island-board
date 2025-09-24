@@ -56,6 +56,8 @@ export function useLocation() {
         setHasConfirmedLocation(true)
         localStorage.setItem('hachijo-location-status', JSON.stringify({
           isInHachijo,
+          distance,
+          location: testLocation,
           lastChecked: Date.now()
         }))
         console.log('開発環境：位置情報取得完了（テストデータ）')
@@ -73,6 +75,8 @@ export function useLocation() {
         // ローカルストレージに保存（プライバシーに配慮して簡素化）
         localStorage.setItem('hachijo-location-status', JSON.stringify({
           isInHachijo: gpsResult.isInHachijo,
+          distance: gpsResult.distance,
+          location: gpsResult.location,
           lastChecked: Date.now()
         }))
         console.log('位置情報取得成功')
@@ -117,6 +121,8 @@ export function useLocation() {
           setLocationResult(prev => ({
             ...prev,
             isInHachijo: data.isInHachijo,
+            distance: data.distance || null,
+            location: data.location || null,
             status: 'success'
           }))
           setHasAskedPermission(true)

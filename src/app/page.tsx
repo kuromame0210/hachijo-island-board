@@ -11,9 +11,9 @@ import { SimpleAccessDenied } from '@/components/AccessDenied'
 import { Post } from '@/types'
 
 const categoryColors = {
-  '不動産': 'bg-blue-50 text-blue-700 border border-blue-200',
-  '仕事': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  '不用品': 'bg-amber-50 text-amber-700 border border-amber-200'
+  '不動産': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-blue-800 shadow-md',
+  '仕事': 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-2 border-emerald-800 shadow-md',
+  '不用品': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-2 border-orange-700 shadow-md'
 }
 
 const categories = ['すべて', '不動産', '仕事', '不用品']
@@ -31,7 +31,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [mounted, setMounted] = useState(false)
-  const { locationResult, hasAskedPermission } = useLocation()
+  const { locationResult, hasAskedPermission, requestLocation } = useLocation()
 
   useEffect(() => {
     fetchPosts()
@@ -61,15 +61,24 @@ export default function HomePage() {
   }, [posts, selectedCategory, hasAskedPermission, locationResult])
 
   const fetchPosts = async () => {
-    const { data } = await supabase
-      .from('hachijo_post_board')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('hachijo_post_board')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (data) {
-      setPosts(data)
+      if (error) {
+        console.error('Supabase error:', error)
+        setPosts([])
+      } else if (data) {
+        setPosts(data)
+      }
+    } catch (error) {
+      console.error('Fetch error:', error)
+      setPosts([])
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleCategoryClick = (category: string) => {
@@ -84,6 +93,97 @@ export default function HomePage() {
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
+  }
+
+  // 位置情報未確認時の大きな確認画面
+  if (!hasAskedPermission) {
+    return (
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+        <div className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl shadow-2xl border-4 border-blue-200">
+          <div className="text-center space-y-8">
+            <div className="text-8xl mb-6">🏝️</div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-4">
+              八丈島島民専用掲示板
+            </h1>
+            <div className="bg-white/80 rounded-2xl p-6 border-2 border-blue-300">
+              <h2 className="text-2xl font-semibold text-blue-800 mb-4">
+                📍 位置情報の確認が必要です
+              </h2>
+              <p className="text-lg text-slate-700 mb-6 leading-relaxed">
+                この掲示板は八丈島島民専用サービスです。<br/>
+                ご利用には位置情報による島内確認が必要となります。
+              </p>
+              <button
+                onClick={() => {
+                  console.log('位置確認ボタンクリック')
+                  requestLocation()
+                }}
+                className="px-8 py-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-2xl transition-all shadow-lg transform hover:scale-105"
+              >
+                位置情報を確認する
+              </button>
+            </div>
+            <div className="text-sm text-slate-600 space-y-2">
+              <p>⚠️ 位置情報は島内確認のためのみ使用されます</p>
+              <p>🔒 個人情報は収集・保存されません</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 位置情報確認中の画面
+  if (locationResult.status === 'loading') {
+    return (
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+        <div className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl shadow-2xl border-4 border-blue-200">
+          <div className="text-center space-y-8">
+            <div className="text-8xl mb-6 animate-pulse">🔄</div>
+            <h1 className="text-3xl font-bold text-slate-800 mb-4">
+              位置情報を確認中...
+            </h1>
+            <p className="text-lg text-slate-700">
+              GPSまたはIPアドレスによる位置情報を取得しています
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 八丈島外からのアクセス制限画面
+  if (hasAskedPermission && (!locationResult.isInHachijo)) {
+    return (
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+        <div className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-red-50 to-orange-100 rounded-3xl shadow-2xl border-4 border-red-200">
+          <div className="text-center space-y-8">
+            <div className="text-8xl mb-6">🚫</div>
+            <h1 className="text-4xl font-bold text-red-800 mb-4">
+              アクセス制限
+            </h1>
+            <div className="bg-white/80 rounded-2xl p-6 border-2 border-red-300">
+              <h2 className="text-2xl font-semibold text-red-700 mb-4">
+                ここは八丈島ではありません
+              </h2>
+              <p className="text-lg text-slate-700 mb-4 leading-relaxed">
+                このサイトは閲覧できません。
+              </p>
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                <p className="text-lg font-semibold text-red-800">
+                  🏝️ ここは八丈島島民専用掲示板です
+                </p>
+              </div>
+            </div>
+            {locationResult.distance !== null && (
+              <div className="text-sm text-slate-600">
+                <p>現在地から八丈島まで約 {locationResult.distance}km</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -105,12 +205,12 @@ export default function HomePage() {
                 key={category}
                 onClick={() => handleCategoryClick(category)}
                 disabled={isJobsRestricted}
-                className={`px-4 py-2 rounded-lg transition text-sm relative ${
+                className={`px-5 py-3 rounded-lg transition-all text-sm font-medium relative shadow-sm ${
                   selectedCategory === category
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
                     : isJobsRestricted
-                    ? 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-300 hover:bg-blue-50'
+                    ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
                 }`}
                 title={isJobsRestricted ? '仕事情報は島民限定です' : ''}
               >
@@ -129,10 +229,10 @@ export default function HomePage() {
               setViewMode('list')
               localStorage.setItem('viewMode', 'list')
             }}
-            className={`px-3 py-2 rounded-lg transition text-sm ${
+            className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
               viewMode === 'list'
-                ? 'bg-gray-900 text-white'
-                : 'bg-white border border-gray-200 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-md'
+                : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
             }`}
           >
             📋 リスト
@@ -142,21 +242,14 @@ export default function HomePage() {
               setViewMode('grid')
               localStorage.setItem('viewMode', 'grid')
             }}
-            className={`px-3 py-2 rounded-lg transition text-sm ${
+            className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
               viewMode === 'grid'
-                ? 'bg-gray-900 text-white'
-                : 'bg-white border border-gray-200 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-md'
+                : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
             }`}
           >
             ⊞ カード
           </button>
-          <a
-            href="/settings"
-            className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm flex items-center gap-1"
-            title="設定で詳細な表示オプションを変更"
-          >
-            ⚙️ 設定
-          </a>
         </div>
       </div>
 
@@ -165,7 +258,7 @@ export default function HomePage() {
         <SimpleAccessDenied type="jobs" />
       ) : viewMode === 'list' ? (
         // リスト表示
-        <div className="bg-white border-t border-b border-gray-400">
+        <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden">
           {filteredPosts.map((post, index) => (
             <React.Fragment key={post.id}>
               {/* 広告挿入 */}
@@ -181,13 +274,13 @@ export default function HomePage() {
               )}
 
               <a href={`/post/${post.id}`} className="block">
-                <div className={`hover:bg-gray-50 transition-colors duration-200 cursor-pointer border-b border-gray-400 ${index === filteredPosts.length - 1 ? 'border-b-0' : ''}`}>
+                <div className={`hover:bg-slate-50 transition-colors duration-200 cursor-pointer border-b border-slate-200 ${index === filteredPosts.length - 1 ? 'border-b-0' : ''}`}>
                   <div className="py-2 px-3">
                     <div className="flex gap-2">
                       {/* 画像/アイコン */}
                       <div className="flex-shrink-0">
                         {(post.images && post.images.length > 0) || post.image_url ? (
-                          <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden border border-gray-400">
+                          <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-slate-300 shadow-sm">
                             <img
                               src={post.images && post.images.length > 0 ? post.images[0] : post.image_url}
                               alt={post.title}
@@ -195,7 +288,7 @@ export default function HomePage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center border border-gray-400">
+                          <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center border-2 border-slate-300 shadow-sm">
                             <span className="text-lg">
                               {post.category === '不動産' ? '🏠' :
                                post.category === '仕事' ? '💼' :
@@ -261,25 +354,33 @@ export default function HomePage() {
         </div>
       ) : (
         // カード表示（既存）
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPosts.map((post, index) => (
-            <div key={post.id}>
-              {/* 広告挿入 */}
-              {index === 2 && (
-                <div className="md:col-span-2 lg:col-span-3 my-4">
-                  <AdBanner size="medium" type="banner" />
-                </div>
-              )}
-              {index === 5 && (
-                <div className="md:col-span-2 lg:col-span-3 my-4">
-                  <AdBanner size="medium" type="banner" />
-                </div>
-              )}
+        <div>
+          {/* 最初の広告 */}
+          {filteredPosts.length > 3 && (
+            <div className="mb-6">
+              <AdBanner size="medium" type="banner" />
+            </div>
+          )}
 
-              <a href={`/post/${post.id}`}>
-                <Card className="hover:shadow-lg transition cursor-pointer h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPosts.map((post, index) => (
+              <React.Fragment key={post.id}>
+                {/* 中間広告 */}
+                {index === 6 && (
+                  <div className="md:col-span-2 lg:col-span-3 my-6">
+                    <AdBanner size="medium" type="banner" />
+                  </div>
+                )}
+                {index === 12 && (
+                  <div className="md:col-span-2 lg:col-span-3 my-6">
+                    <AdBanner size="medium" type="banner" />
+                  </div>
+                )}
+
+                <a href={`/post/${post.id}`}>
+                <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full border-2 border-slate-200 hover:border-slate-300 bg-white rounded-xl overflow-hidden">
                   {(post.images && post.images.length > 0) || post.image_url ? (
-                    <div className="h-48 bg-gray-200 rounded-t-lg overflow-hidden relative">
+                    <div className="h-72 bg-slate-200 overflow-hidden relative">
                       <img
                         src={post.images && post.images.length > 0 ? post.images[0] : post.image_url}
                         alt={post.title}
@@ -291,8 +392,29 @@ export default function HomePage() {
                         </div>
                       )}
                     </div>
-                  ) : null}
-                  <div className="p-6">
+                  ) : (
+                    <div className="h-72 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden relative flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-6xl mb-4">
+                          {post.category === '不動産' ? '🏠' :
+                           post.category === '仕事' ? '💼' :
+                           post.category === '不用品' ? '📦' : '📝'}
+                        </div>
+                        <div className="text-slate-500 font-medium text-lg">
+                          {post.category === '不動産' ? '不動産情報' :
+                           post.category === '仕事' ? '求人情報' :
+                           post.category === '不用品' ? '不用品情報' : '投稿'}
+                        </div>
+                        <div className="text-slate-400 text-sm mt-2">
+                          画像なし
+                        </div>
+                      </div>
+                      {/* 装飾パターン */}
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/30 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-slate-300/20 to-transparent"></div>
+                    </div>
+                  )}
+                  <div className="p-6 bg-gradient-to-b from-white to-slate-50">
                     <div className="flex items-start justify-between mb-2">
                       <Badge className={categoryColors[post.category as keyof typeof categoryColors]}>
                         {post.category}
@@ -315,8 +437,9 @@ export default function HomePage() {
                   </div>
                 </Card>
               </a>
-            </div>
-          ))}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       )}
 

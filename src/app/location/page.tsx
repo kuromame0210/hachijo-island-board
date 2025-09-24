@@ -1,11 +1,192 @@
 'use client'
 
 import Link from 'next/link'
-import LocationRestrictionStatus from '@/components/LocationRestrictionStatus'
-import LocationTester from '@/components/LocationTester'
+import { useLocation } from '@/hooks/useLocation'
 import { Card } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
 
 export default function LocationPage() {
+  const { locationResult, hasAskedPermission, requestLocation, isLoading } = useLocation()
+  const [lastCheckedTime, setLastCheckedTime] = useState<Date | null>(null)
+
+  // ローカルストレージから確認時刻を取得
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('hachijo-location-status')
+      if (cached) {
+        try {
+          const data = JSON.parse(cached)
+          if (data.lastChecked) {
+            setLastCheckedTime(new Date(data.lastChecked))
+          }
+        } catch (e) {
+          console.warn('位置情報キャッシュの解析に失敗:', e)
+        }
+      }
+    }
+  }, [hasAskedPermission, locationResult]) // 位置情報が更新された時に再実行
+
+  // 現在の位置情報を表示するコンポーネント
+  const CurrentLocationStatus = () => {
+    if (!hasAskedPermission) {
+      return (
+        <Card>
+          <div className="p-8 text-center">
+            <div className="text-6xl mb-4">📍</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">位置情報未確認</h3>
+            <p className="text-gray-600 mb-6">
+              位置情報を確認して利用可能な機能をご確認ください
+            </p>
+            <button
+              onClick={requestLocation}
+              disabled={isLoading}
+              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              位置情報を確認する
+            </button>
+          </div>
+        </Card>
+      )
+    }
+
+    if (locationResult.status === 'loading' || isLoading) {
+      return (
+        <Card>
+          <div className="p-8 text-center">
+            <div className="text-6xl mb-4 animate-pulse">🔄</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">位置情報確認中...</h3>
+            <p className="text-gray-600">
+              GPSまたはIPアドレスによる位置情報を取得しています
+            </p>
+          </div>
+        </Card>
+      )
+    }
+
+    if (locationResult.status === 'error') {
+      return (
+        <Card>
+          <div className="p-8 text-center">
+            <div className="text-6xl mb-4">❌</div>
+            <h3 className="text-2xl font-bold text-red-600 mb-4">位置情報取得失敗</h3>
+            <p className="text-gray-600 mb-6">
+              {locationResult.error || '位置情報を取得できませんでした'}
+            </p>
+            <button
+              onClick={requestLocation}
+              disabled={isLoading}
+              className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              再度検出し直す
+            </button>
+          </div>
+        </Card>
+      )
+    }
+
+    // 成功時の表示
+    const isInHachijo = locationResult.isInHachijo
+    const location = locationResult.location
+
+    return (
+      <Card>
+        <div className="p-8">
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">
+              {isInHachijo ? '🏝️' : '🌍'}
+            </div>
+            <h3 className="text-2xl font-bold mb-4">
+              {isInHachijo ? '八丈島内からのアクセス' : '八丈島外からのアクセス'}
+            </h3>
+          </div>
+
+          {/* デバッグ情報 */}
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs">
+            <div>Debug Info:</div>
+            <div>hasAskedPermission: {hasAskedPermission.toString()}</div>
+            <div>locationResult.status: {locationResult.status}</div>
+            <div>locationResult.location: {JSON.stringify(locationResult.location)}</div>
+            <div>locationResult.isInHachijo: {locationResult.isInHachijo.toString()}</div>
+            <div>locationResult.distance: {locationResult.distance}</div>
+          </div>
+
+          {/* 位置情報の詳細 */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-700 mb-2">📍 現在地</h4>
+              {location ? (
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>緯度: {location.lat.toFixed(6)}°</div>
+                  <div>経度: {location.lng.toFixed(6)}°</div>
+                  {locationResult.distance !== null && (
+                    <div className="text-blue-600 font-semibold mt-2">
+                      八丈島まで約 {locationResult.distance}km
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">位置情報なし</div>
+              )}
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-700 mb-2">⏰ 確認時刻</h4>
+              <div className="text-sm text-gray-600">
+                {lastCheckedTime ? lastCheckedTime.toLocaleString('ja-JP') : '確認時刻なし'}
+              </div>
+            </div>
+          </div>
+
+          {/* 利用可能な機能 */}
+          <div className="mb-8">
+            <h4 className="font-semibold text-gray-700 mb-4">🔧 利用可能な機能</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <span className="font-medium text-green-800">📄 掲示板閲覧</span>
+                <span className="text-green-600 font-bold">✓</span>
+              </div>
+
+              {isInHachijo && (
+                <>
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="font-medium text-green-800">✍️ 投稿機能</span>
+                    <span className="text-green-600 font-bold">✓</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="font-medium text-green-800">💼 仕事情報</span>
+                    <span className="text-green-600 font-bold">✓</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="font-medium text-green-800">🏝️ 島民限定機能</span>
+                    <span className="text-green-600 font-bold">✓</span>
+                  </div>
+                </>
+              )}
+
+              {!isInHachijo && (
+                <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <span className="font-medium text-amber-800">⚠️ 閲覧のみ利用可能</span>
+                  <span className="text-amber-600 font-bold">制限中</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 再検出ボタン */}
+          <div className="text-center">
+            <button
+              onClick={requestLocation}
+              disabled={isLoading}
+              className="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            >
+              再度検出し直す
+            </button>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* ヘッダー */}
@@ -19,151 +200,16 @@ export default function LocationPage() {
       </div>
 
       {/* 現在のステータス */}
-      <LocationRestrictionStatus />
-
-      {/* 位置制限の詳細説明 */}
-      <Card>
-        <div className="p-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            🔒 機能制限の仕組み
-          </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold text-lg mb-3">📍 位置判定方法</h3>
-              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                <div>
-                  <strong className="text-blue-600">1. GPS位置情報</strong>
-                  <p className="text-sm text-gray-600 mt-1">
-                    ブラウザのGeolocation APIを使用して正確な位置を取得します
-                  </p>
-                </div>
-                <div>
-                  <strong className="text-blue-600">2. IPアドレス位置情報</strong>
-                  <p className="text-sm text-gray-600 mt-1">
-                    GPS が利用できない場合の代替手段として使用します
-                  </p>
-                </div>
-                <div>
-                  <strong className="text-blue-600">3. キャッシュ機能</strong>
-                  <p className="text-sm text-gray-600 mt-1">
-                    一度確認した位置情報は1時間ローカルに保存されます
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-lg mb-3">🏝️ 八丈島の地理的境界</h3>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <strong>北端</strong><br/>
-                    <span className="text-blue-600">33.155°N</span>
-                  </div>
-                  <div>
-                    <strong>南端</strong><br/>
-                    <span className="text-blue-600">33.045°N</span>
-                  </div>
-                  <div>
-                    <strong>東端</strong><br/>
-                    <span className="text-blue-600">139.81°E</span>
-                  </div>
-                  <div>
-                    <strong>西端</strong><br/>
-                    <span className="text-blue-600">139.74°E</span>
-                  </div>
-                </div>
-                <div className="mt-3 pt-3 border-t border-blue-200">
-                  <strong>中心座標:</strong> <span className="text-blue-600">33.1067°N, 139.7853°E</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-lg mb-3">⚙️ プライバシーとセキュリティ</h3>
-              <div className="space-y-2 text-sm text-gray-700">
-                <div>✅ 位置情報はローカルストレージにのみ保存</div>
-                <div>✅ データベースには位置情報を保存しません</div>
-                <div>✅ 1時間でキャッシュは自動削除</div>
-                <div>✅ 必要最小限の情報のみ使用</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* 位置テスター */}
-      <div id="test">
-        <LocationTester />
-      </div>
-
-      {/* よくある質問 */}
-      <Card>
-        <div className="p-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            ❓ よくある質問
-          </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold text-blue-600 mb-2">Q. 位置情報が取得できません</h3>
-              <div className="text-sm text-gray-700 space-y-1 ml-4">
-                <p>A. 以下をご確認ください：</p>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>ブラウザで位置情報の使用を許可しているか</li>
-                  <li>HTTPS接続になっているか（一部ブラウザで必要）</li>
-                  <li>古いブラウザを使用していないか</li>
-                </ul>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-blue-600 mb-2">Q. 八丈島にいるのに島外判定されます</h3>
-              <div className="text-sm text-gray-700 space-y-1 ml-4">
-                <p>A. 以下の原因が考えられます：</p>
-                <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>GPS の精度が低い場合があります</li>
-                  <li>位置テスターで正確な座標を確認してください</li>
-                  <li>Wi-Fi接続時は位置精度が変わる場合があります</li>
-                </ul>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-blue-600 mb-2">Q. なぜ位置制限があるのですか？</h3>
-              <div className="text-sm text-gray-700 ml-4">
-                <p>A. 八丈島のローカルコミュニティを保護し、島民向けのサービスを適切に提供するためです。特に仕事情報や島民限定機能は、現地の方々のための機能として設計されています。</p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-blue-600 mb-2">Q. VPNを使用している場合はどうなりますか？</h3>
-              <div className="text-sm text-gray-700 ml-4">
-                <p>A. VPNを使用している場合、実際の位置とは異なる場所と判定される可能性があります。正確な判定のため、VPNを無効にして再度お試しください。</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <CurrentLocationStatus />
 
       {/* フッターナビゲーション */}
-      <div className="text-center py-8 border-t border-gray-200">
-        <div className="flex flex-wrap justify-center gap-4 mb-4">
-          <Link
-            href="/"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            🏠 ホームに戻る
-          </Link>
-          <a
-            href="/test"
-            className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-          >
-            🧪 テストページ
-          </a>
-        </div>
-        <p className="text-sm text-gray-500">
-          位置情報について不明な点がある場合は、お気軽にお問い合わせください
-        </p>
+      <div className="text-center py-8">
+        <Link
+          href="/"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+        >
+          🏠 ホームに戻る
+        </Link>
       </div>
     </div>
   )

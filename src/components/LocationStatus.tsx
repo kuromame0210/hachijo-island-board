@@ -4,6 +4,9 @@ import { useLocation } from '@/hooks/useLocation'
 import { useState } from 'react'
 
 export default function LocationStatusBar() {
+  // 一時的に非表示
+  return null
+
   const { locationResult, hasAskedPermission, requestLocation, isLoading } = useLocation()
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -11,20 +14,20 @@ export default function LocationStatusBar() {
   const getLocationStatus = () => {
     if (!hasAskedPermission) {
       return {
-        color: 'bg-amber-100 text-amber-800 border-amber-300',
+        color: 'bg-gradient-to-r from-orange-50 to-yellow-50 text-orange-800 border-2 border-orange-300 shadow-lg',
         icon: '📍',
-        status: '位置確認をお願いします',
-        detail: '一部機能を利用するには位置情報の確認が必要です',
+        status: '位置情報の確認が必要です',
+        detail: '八丈島内からのアクセスで全機能をご利用いただけます',
         action: '位置を確認する'
       }
     }
 
     if (locationResult.status === 'loading' || isLoading) {
       return {
-        color: 'bg-blue-100 text-blue-700 border-blue-200',
+        color: 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-2 border-blue-300 shadow-lg',
         icon: '🔄',
-        status: '確認中...',
-        detail: '位置情報を取得しています',
+        status: '位置情報を確認中...',
+        detail: 'GPSまたはIPアドレスによる位置情報を取得しています',
         action: null
       }
     }
@@ -41,10 +44,10 @@ export default function LocationStatusBar() {
 
     if (locationResult.isInHachijo) {
       return {
-        color: 'bg-green-100 text-green-700 border-green-200',
+        color: 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-800 border-2 border-emerald-400 shadow-lg',
         icon: '🏝️',
-        status: '八丈島内',
-        detail: '八丈島からアクセス中（全機能利用可能）',
+        status: '八丈島内からのアクセス',
+        detail: '全機能をご利用いただけます。投稿・閲覧・連絡機能が利用可能です。',
         action: null
       }
     }
@@ -60,10 +63,10 @@ export default function LocationStatusBar() {
     }
 
     return {
-      color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      color: 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 border-2 border-slate-300 shadow-lg',
       icon: '🌏',
-      status: '八丈島外',
-      detail: '八丈島外からアクセス中（一部機能制限）',
+      status: '八丈島外からのアクセス',
+      detail: '閲覧機能のみご利用いただけます。投稿機能は制限されています。',
       action: null
     }
   }
@@ -71,7 +74,7 @@ export default function LocationStatusBar() {
   const statusInfo = getLocationStatus()
 
   return (
-    <div className={`fixed top-24 right-4 z-40 ${statusInfo.color} border-2 rounded-xl shadow-lg transition-all duration-300 ${isExpanded ? 'w-96 max-w-[calc(100vw-2rem)]' : 'max-w-[calc(100vw-2rem)]'}`}>
+    <div className={`fixed top-24 right-4 z-40 ${statusInfo.color} rounded-xl transition-all duration-300 backdrop-blur-sm ${isExpanded ? 'w-96 max-w-[calc(100vw-2rem)]' : 'max-w-[calc(100vw-2rem)]'}`}>
       <div className="flex items-center">
         {/* メイン情報エリア（クリックで展開） */}
         <div
@@ -110,7 +113,7 @@ export default function LocationStatusBar() {
                 requestLocation()
               }}
               disabled={isLoading}
-              className="px-4 py-2.5 text-base font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 shadow-md whitespace-nowrap"
+              className="px-4 py-2.5 text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all disabled:opacity-50 shadow-lg whitespace-nowrap transform hover:scale-105"
             >
               {isLoading ? '確認中...' : '確認'}
             </button>

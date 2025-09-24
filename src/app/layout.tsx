@@ -19,33 +19,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${inter.className} bg-gray-50`}>
-        <header className="bg-white border-b border-gray-300 shadow-sm">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <Link href="/" className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              🏝️ 八丈島掲示板
-              <span className="text-sm font-normal text-blue-600 hidden sm:inline">〜島のコミュニティ〜</span>
+      <body className={`${inter.className} bg-slate-50`}>
+        <header className="bg-gradient-to-r from-slate-800 to-slate-700 border-b-4 border-blue-600 shadow-lg">
+          <div className="container mx-auto px-4 h-18 flex items-center justify-between">
+            <Link href="/" className="text-xl font-bold text-white flex items-center gap-3">
+              <div className="bg-white p-2 rounded-full">
+                <span className="text-2xl">🏝️</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold">八丈島掲示板</span>
+                <span className="text-xs text-blue-200 hidden sm:block">八丈島地域コミュニティ情報サービス</span>
+              </div>
             </Link>
 
             {/* デスクトップナビゲーション */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-2">
               <Link
                 href="/"
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
               >
-                🏠 ホーム
+                <span className="mr-2">🏠</span>ホーム
               </Link>
               <a
                 href="/location"
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
               >
-                📍 位置情報
-              </a>
-              <a
-                href="/new"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-200 text-sm font-medium ml-2"
-              >
-                ✍️ 投稿する
+                <span className="mr-2">📍</span>位置情報
               </a>
             </nav>
 
@@ -60,24 +59,45 @@ export default function RootLayout({
         </main>
         {/* フローティング位置情報ステータス */}
         <LocationStatusBar />
-        <footer className="bg-gray-50 py-6 border-t border-gray-200">
+        <footer className="bg-slate-800 text-slate-300 py-8 border-t-4 border-blue-600">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-4">
-                <div className="text-sm text-gray-600 mb-2">スポンサー広告枠</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-300 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <p className="font-semibold text-gray-600">📢 広告枠 A</p>
-                    <p className="text-xs text-gray-500">300×100 サイズ対応</p>
-                  </div>
-                  <div className="bg-white border border-gray-300 rounded-lg p-4 text-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <p className="font-semibold text-gray-600">📢 広告枠 B</p>
-                    <p className="text-xs text-gray-500">300×100 サイズ対応</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <span className="text-lg">🏝️</span>八丈島掲示板
+                  </h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    八丈島の地域コミュニティのための<br/>
+                    情報交換プラットフォーム
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-3">サイト情報</h4>
+                  <ul className="text-sm text-slate-400 space-y-2">
+                    <li><a href="/about" className="hover:text-white transition-colors">• このサイトについて</a></li>
+                    <li><a href="/terms" className="hover:text-white transition-colors">• 利用規約</a></li>
+                    <li><a href="/privacy" className="hover:text-white transition-colors">• プライバシーポリシー</a></li>
+                    <li><a href="/contact" className="hover:text-white transition-colors">• お問い合わせ</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-3">重要なお知らせ</h4>
+                  <div className="bg-slate-700 p-3 rounded-lg">
+                    <p className="text-sm text-slate-300">
+                      <span className="text-yellow-400">⚠️</span> 位置情報に基づく<br/>
+                      機能制限があります
+                    </p>
                   </div>
                 </div>
               </div>
-              <div className="text-center text-xs text-gray-500 border-t border-gray-200 pt-4">
-                © 2024 八丈島掲示板. All rights reserved.
+              <div className="border-t border-slate-600 pt-6 text-center">
+                <p className="text-sm text-slate-400">
+                  © 2025 八丈島地域コミュニティ掲示板
+                </p>
+                <p className="text-xs text-slate-500 mt-2">
+                  本サービスは地域コミュニティの発展を目的としています
+                </p>
               </div>
             </div>
           </div>
