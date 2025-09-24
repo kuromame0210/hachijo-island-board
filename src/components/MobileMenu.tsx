@@ -87,25 +87,25 @@ export default function MobileMenu() {
                   <span className="text-xl">🏠</span>
                   <span className="font-medium">ホーム</span>
                 </Link>
-                <a
+                <Link
                   href="/location"
                   className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   <span className="text-xl">📍</span>
                   <span className="font-medium">位置情報</span>
-                </a>
+                </Link>
 
                 {/* 投稿リンク（島民限定） */}
                 {isIslander && (
-                  <a
+                  <Link
                     href="/new"
                     className="flex items-center gap-3 px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
                     <span className="text-xl">✍️</span>
                     <span className="font-medium">投稿する</span>
-                  </a>
+                  </Link>
                 )}
               </nav>
 
@@ -122,14 +122,14 @@ export default function MobileMenu() {
                     <span>不動産</span>
                   </Link>
                   {isIslander && (
-                    <a
+                    <Link
                       href="/?category=仕事"
                       className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                       onClick={() => setIsOpen(false)}
                     >
                       <span>💼</span>
                       <span>仕事</span>
-                    </a>
+                    </Link>
                   )}
                   <Link
                     href="/?category=不用品"

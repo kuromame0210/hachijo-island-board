@@ -131,7 +131,7 @@ export default function LocationStatusBar() {
               </div>
               {locationResult.location && (
                 <div>
-                  <span className="font-medium">座標:</span> {locationResult.location.lat.toFixed(4)}, {locationResult.location.lng.toFixed(4)}
+                  <span className="font-medium">座標:</span> {locationResult.location!.lat.toFixed(4)}, {locationResult.location!.lng.toFixed(4)}
                 </div>
               )}
               {locationResult.distance !== null && (
