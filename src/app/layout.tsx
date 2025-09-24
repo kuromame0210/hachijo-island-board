@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import LocationStatusBar from "@/components/LocationStatus";
 import ClientComponents from "@/components/ClientComponents";
@@ -20,35 +21,29 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`${inter.className} bg-gray-50`}>
         <header className="bg-white border-b border-gray-300 shadow-sm">
-          <div className="container mx-auto px-4 h-12 flex items-center justify-between">
-            <a href="/" className="text-lg font-bold text-gray-900 flex items-center gap-1">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            <Link href="/" className="text-xl font-bold text-gray-900 flex items-center gap-2">
               🏝️ 八丈島掲示板
-              <span className="text-xs font-normal text-blue-600 hidden sm:inline">〜島のコミュニティ〜</span>
-            </a>
+              <span className="text-sm font-normal text-blue-600 hidden sm:inline">〜島のコミュニティ〜</span>
+            </Link>
 
             {/* デスクトップナビゲーション */}
-            <nav className="hidden md:flex items-center gap-0.5">
-              <a
+            <nav className="hidden md:flex items-center gap-1">
+              <Link
                 href="/"
-                className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
               >
                 🏠 ホーム
-              </a>
-              <a
-                href="/about"
-                className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-              >
-                ℹ️ 説明
-              </a>
+              </Link>
               <a
                 href="/location"
-                className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
               >
                 📍 位置情報
               </a>
               <a
                 href="/new"
-                className="bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors duration-200 text-xs font-medium ml-1"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-200 text-sm font-medium ml-2"
               >
                 ✍️ 投稿する
               </a>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useLocation } from '@/hooks/useLocation'
 
 export default function MobileMenu() {
@@ -78,22 +79,14 @@ export default function MobileMenu() {
 
               {/* ナビゲーションリンク */}
               <nav className="space-y-1">
-                <a
+                <Link
                   href="/"
                   className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   <span className="text-xl">🏠</span>
                   <span className="font-medium">ホーム</span>
-                </a>
-                <a
-                  href="/about"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <span className="text-xl">ℹ️</span>
-                  <span className="font-medium">説明</span>
-                </a>
+                </Link>
                 <a
                   href="/location"
                   className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
@@ -133,14 +126,14 @@ export default function MobileMenu() {
               <div className="mt-8">
                 <h3 className="text-sm font-semibold text-gray-500 mb-3 px-4">カテゴリ</h3>
                 <div className="space-y-1">
-                  <a
+                  <Link
                     href="/?category=不動産"
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                     onClick={() => setIsOpen(false)}
                   >
                     <span>🏠</span>
                     <span>不動産</span>
-                  </a>
+                  </Link>
                   <a
                     href={isIslander ? "/?category=仕事" : "#"}
                     className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm ${
@@ -156,14 +149,14 @@ export default function MobileMenu() {
                     <span>仕事</span>
                     {!isIslander && <span className="text-xs">🔒</span>}
                   </a>
-                  <a
+                  <Link
                     href="/?category=不用品"
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                     onClick={() => setIsOpen(false)}
                   >
                     <span>📦</span>
                     <span>不用品</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
 

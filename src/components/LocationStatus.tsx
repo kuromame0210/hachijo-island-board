@@ -71,18 +71,18 @@ export default function LocationStatusBar() {
   const statusInfo = getLocationStatus()
 
   return (
-    <div className={`fixed top-20 right-4 z-40 ${statusInfo.color} border-2 rounded-xl shadow-lg transition-all duration-300 ${isExpanded ? 'w-96 max-w-[calc(100vw-2rem)]' : 'max-w-[calc(100vw-2rem)]'}`}>
+    <div className={`fixed top-24 right-4 z-40 ${statusInfo.color} border-2 rounded-xl shadow-lg transition-all duration-300 ${isExpanded ? 'w-96 max-w-[calc(100vw-2rem)]' : 'max-w-[calc(100vw-2rem)]'}`}>
       <div className="flex items-center">
         {/* メイン情報エリア（クリックで展開） */}
         <div
-          className="px-4 py-3 cursor-pointer flex items-center gap-3 flex-1"
+          className="px-5 py-4 cursor-pointer flex items-center gap-4 flex-1"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span className="text-2xl">{statusInfo.icon}</span>
+          <span className="text-3xl">{statusInfo.icon}</span>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-base">{statusInfo.status}</div>
+            <div className="font-bold text-lg">{statusInfo.status}</div>
             {!isExpanded && (
-              <div className="text-sm mt-0.5 opacity-80">
+              <div className="text-base mt-1 opacity-80">
                 クリックで詳細
               </div>
             )}
@@ -93,16 +93,16 @@ export default function LocationStatusBar() {
             )}
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-lg">{isExpanded ? '▲' : '▼'}</span>
+            <span className="text-xl">{isExpanded ? '▲' : '▼'}</span>
             {!isExpanded && (
-              <span className="text-xs opacity-75">詳細</span>
+              <span className="text-sm opacity-75">詳細</span>
             )}
           </div>
         </div>
 
         {/* 確認ボタン（常に表示） */}
         {statusInfo.action && !isExpanded && (
-          <div className="px-2">
+          <div className="px-3">
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -110,7 +110,7 @@ export default function LocationStatusBar() {
                 requestLocation()
               }}
               disabled={isLoading}
-              className="px-3 py-2 text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 shadow-md whitespace-nowrap"
+              className="px-4 py-2.5 text-base font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 shadow-md whitespace-nowrap"
             >
               {isLoading ? '確認中...' : '確認'}
             </button>
@@ -226,8 +226,8 @@ export function SimpleLocationStatus() {
 
   if (!hasAskedPermission) {
     return (
-      <div className="flex items-center gap-1 text-xs sm:text-sm text-amber-600 font-medium">
-        <span>📍</span>
+      <div className="flex items-center gap-2 text-sm sm:text-base text-amber-600 font-medium">
+        <span className="text-lg">📍</span>
         <span className="hidden sm:inline">位置確認</span>
       </div>
     )
@@ -235,8 +235,8 @@ export function SimpleLocationStatus() {
 
   if (locationResult.status === 'loading') {
     return (
-      <div className="flex items-center gap-1 text-xs sm:text-sm text-blue-600">
-        <span>🔄</span>
+      <div className="flex items-center gap-2 text-sm sm:text-base text-blue-600">
+        <span className="text-lg">🔄</span>
         <span className="hidden sm:inline">確認中</span>
       </div>
     )
@@ -244,16 +244,16 @@ export function SimpleLocationStatus() {
 
   if (locationResult.isInHachijo) {
     return (
-      <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600 font-medium">
-        <span>🏝️</span>
+      <div className="flex items-center gap-2 text-sm sm:text-base text-green-600 font-medium">
+        <span className="text-lg">🏝️</span>
         <span>八丈島</span>
       </div>
     )
   }
 
   return (
-    <div className="flex items-center gap-1 text-xs sm:text-sm text-orange-600">
-      <span>📍</span>
+    <div className="flex items-center gap-2 text-sm sm:text-base text-orange-600">
+      <span className="text-lg">📍</span>
       <span className="hidden sm:inline">島外</span>
     </div>
   )

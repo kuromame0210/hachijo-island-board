@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import AdBanner from '@/components/ads/AdBanner'
+import { Post } from '@/types'
 
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
-  const [post, setPost] = useState<any>(null)
+  const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
@@ -55,7 +56,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
         <h1 className="text-4xl font-bold mb-8 text-gray-900 leading-tight">{post.title}</h1>
 
-        {post.price !== null && (
+        {post.price !== null && post.price !== undefined && (
           <div className="text-3xl font-bold text-emerald-600 mb-8">
             ¥{post.price.toLocaleString()}
           </div>

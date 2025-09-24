@@ -140,7 +140,7 @@ export async function detectLocationByIP(): Promise<LocationResult> {
     }
 
     throw new Error('IP位置情報が取得できませんでした')
-  } catch (error) {
+  } catch {
     return {
       isInHachijo: false,
       distance: null,

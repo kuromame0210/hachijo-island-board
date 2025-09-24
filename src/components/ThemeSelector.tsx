@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { themes, ThemeName, defaultTheme } from '@/lib/themes'
+import { themes, ThemeName } from '@/lib/themes'
 import { Card } from '@/components/ui/card'
 
 interface ThemeSelectorProps {

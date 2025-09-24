@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import LocationRestrictionStatus from '@/components/LocationRestrictionStatus'
 import LocationTester from '@/components/LocationTester'
 import { Card } from '@/components/ui/card'
@@ -147,18 +148,12 @@ export default function LocationPage() {
       {/* フッターナビゲーション */}
       <div className="text-center py-8 border-t border-gray-200">
         <div className="flex flex-wrap justify-center gap-4 mb-4">
-          <a
+          <Link
             href="/"
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             🏠 ホームに戻る
-          </a>
-          <a
-            href="/about"
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            ℹ️ サービス説明
-          </a>
+          </Link>
           <a
             href="/test"
             className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"

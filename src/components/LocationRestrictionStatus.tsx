@@ -230,8 +230,8 @@ export default function LocationRestrictionStatus() {
 // コンパクト版（ヘッダーなどに組み込み用）
 export function CompactLocationStatus() {
   const { locationResult, hasAskedPermission } = useLocation()
-  const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
-  const availableFeatures = isIslander ? 6 : 1
+  const _ = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
+  // const availableFeatures = isIslander ? 6 : 1
 
   if (!hasAskedPermission) {
     return (

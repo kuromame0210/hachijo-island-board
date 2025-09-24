@@ -13,7 +13,7 @@ export function useLocation() {
   })
 
   const [hasAskedPermission, setHasAskedPermission] = useState(false)
-  const [hasConfirmedLocation, setHasConfirmedLocation] = useState(false)
+  const [, setHasConfirmedLocation] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
 
   // 位置情報を取得する関数

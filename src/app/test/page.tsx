@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import LocationTester from '@/components/LocationTester'
 import LocationRestrictionStatus from '@/components/LocationRestrictionStatus'
 
@@ -37,12 +38,12 @@ export default function TestPage() {
           <p className="text-gray-600 mb-4">
             メインページで仕事カテゴリを選択。島外からは選択できません。
           </p>
-          <a
+          <Link
             href="/?category=仕事"
             className="inline-block bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
           >
             仕事ページへ
-          </a>
+          </Link>
         </div>
       </div>
 

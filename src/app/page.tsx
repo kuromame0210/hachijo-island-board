@@ -8,6 +8,7 @@ import AdBanner from '@/components/ads/AdBanner'
 import { LocationStatus } from '@/components/LocationDetector'
 import { useLocation } from '@/hooks/useLocation'
 import { SimpleAccessDenied } from '@/components/AccessDenied'
+import { Post } from '@/types'
 
 const categoryColors = {
   '不動産': 'bg-blue-50 text-blue-700 border border-blue-200',
@@ -24,8 +25,8 @@ const categoryIcons = {
 }
 
 export default function HomePage() {
-  const [posts, setPosts] = useState<any[]>([])
-  const [filteredPosts, setFilteredPosts] = useState<any[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([])
   const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
@@ -211,7 +212,7 @@ export default function HomePage() {
                           <h3 className="font-medium text-gray-900 text-sm leading-tight truncate flex-1">
                             {post.title}
                           </h3>
-                          {post.price !== null ? (
+                          {post.price !== null && post.price !== undefined ? (
                             <span className="font-bold text-lg text-red-600 flex-shrink-0">
                               ¥{post.price.toLocaleString()}
                             </span>
@@ -296,7 +297,7 @@ export default function HomePage() {
                       <Badge className={categoryColors[post.category as keyof typeof categoryColors]}>
                         {post.category}
                       </Badge>
-                      {post.price !== null && (
+                      {post.price !== null && post.price !== undefined && (
                         <span className="font-bold text-xl text-emerald-600">
                           ¥{post.price.toLocaleString()}
                         </span>

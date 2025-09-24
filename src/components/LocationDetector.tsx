@@ -5,7 +5,7 @@ import { useState } from 'react'
 import PrivacyInfo from '@/components/PrivacyInfo'
 
 export default function LocationDetector() {
-  const { locationResult, requestLocation, hasAskedPermission, isLoading } = useLocation()
+  const { requestLocation, hasAskedPermission, isLoading } = useLocation()
   const [isVisible, setIsVisible] = useState(true)
 
   if (!isVisible || hasAskedPermission) {
