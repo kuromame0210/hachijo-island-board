@@ -40,12 +40,18 @@ export default function RootLayout({
               >
                 <span className="mr-2">🏠</span>ホーム
               </Link>
-              <a
+              <Link
                 href="/location"
                 className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
               >
                 <span className="mr-2">📍</span>位置情報
-              </a>
+              </Link>
+              <Link
+                href="/new"
+                className="px-4 py-2.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors shadow-md"
+              >
+                <span className="mr-2">✍️</span>投稿する
+              </Link>
             </nav>
 
             {/* モバイル用右側 */}
