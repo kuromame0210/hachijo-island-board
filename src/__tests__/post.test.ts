@@ -200,7 +200,7 @@ describe('投稿機能テスト', () => {
       const post = postManager.createPost({
         title: 'テスト',
         description: 'テスト',
-        category: category as any
+        category: category as '不動産' | '仕事' | '不用品'
       })
 
       expect(post.category).toBe(category)

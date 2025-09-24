@@ -230,7 +230,7 @@ export default function LocationRestrictionStatus() {
 // コンパクト版（ヘッダーなどに組み込み用）
 export function CompactLocationStatus() {
   const { locationResult, hasAskedPermission } = useLocation()
-  const _ = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
+  const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
   // const availableFeatures = isIslander ? 6 : 1
 
   if (!hasAskedPermission) {
@@ -253,7 +253,7 @@ export function CompactLocationStatus() {
     )
   }
 
-  if (locationResult.isInHachijo) {
+  if (isIslander) {
     return (
       <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
         <span>🏝️</span>

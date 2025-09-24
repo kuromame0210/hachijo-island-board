@@ -51,7 +51,7 @@ export default function NewPost() {
       const fileExt = image.name.split('.').pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('post-images')
         .upload(fileName, image)
 
