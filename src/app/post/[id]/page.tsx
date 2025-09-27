@@ -100,8 +100,91 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </p>
         </div>
 
+        {/* 新フィールドの表示 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* 報酬・対価情報 */}
+          {(post.reward_type || post.reward_details) && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                💰 報酬・対価
+              </h4>
+              {post.reward_type && (
+                <p className="text-sm text-gray-700 mb-1">
+                  <span className="font-medium">種別:</span> {
+                    post.reward_type === 'money' ? '💰 金銭報酬' :
+                    post.reward_type === 'non_money' ? '🎁 非金銭報酬' :
+                    post.reward_type === 'both' ? '💎 混合報酬' :
+                    '🤝 無償・体験'
+                  }
+                </p>
+              )}
+              {post.reward_details && (
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">詳細:</span> {post.reward_details}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* 作業日時 */}
+          {post.work_date && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                📅 実施日時
+              </h4>
+              <p className="text-sm text-gray-700">{post.work_date}</p>
+            </div>
+          )}
+
+          {/* 参加条件 */}
+          {post.requirements && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+              <h4 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+                📋 参加・応募条件
+              </h4>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{post.requirements}</p>
+            </div>
+          )}
+
+          {/* 注意事項 */}
+          {post.conditions && (
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+              <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                ⚠️ 条件・注意事項
+              </h4>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{post.conditions}</p>
+            </div>
+          )}
+        </div>
+
+        {/* タグ表示 */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="mb-6">
+            <h4 className="font-semibold text-gray-800 mb-3">🏷️ タグ</h4>
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-300"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 年少者参加可能フラグ */}
+        {post.age_friendly && (
+          <div className="mb-6 p-3 bg-gradient-to-r from-green-100 to-teal-100 rounded-lg border border-green-300">
+            <p className="text-sm font-medium text-green-800 flex items-center gap-2">
+              👦👧 年少者（高校生・中学生等）参加可能
+            </p>
+          </div>
+        )}
+
         <div className="border-t border-gray-300 pt-6">
-          <h3 className="font-semibold mb-3">連絡先</h3>
+          <h3 className="font-semibold mb-3">📞 連絡先</h3>
           <p className="text-lg bg-blue-50 p-4 rounded-lg font-mono border border-blue-200">
             {post.contact}
           </p>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,23 +10,59 @@ import { useLocation } from '@/hooks/useLocation'
 import { SimpleAccessDenied } from '@/components/AccessDenied'
 import { Post } from '@/types'
 
+// ハードコードされた広告カード
+const advertisementCards: Post[] = [
+  {
+    id: 'ad-freesia-festival',
+    title: 'フリージア祭り開催中！',
+    content: '八丈島の春を彩るフリージア祭りが開催中です。美しい花々と共に島の魅力をお楽しみください。',
+    description: '3月上旬から4月上旬まで開催。無料シャトルバス運行中。',
+    category: 'イベント',
+    created_at: new Date().toISOString(),
+    work_date: '3月上旬〜4月上旬',
+    reward_type: 'free',
+    reward_details: '入場無料・記念品プレゼント',
+    contact: '八丈島観光協会',
+    age_friendly: true,
+    tags: ['#フリージア祭り', '#八丈島', '#春のイベント']
+  },
+  {
+    id: 'ad-tax-reminder',
+    title: '住民税の納付をお忘れなく',
+    content: '令和6年度住民税の納付期限が近づいています。期限内の納付にご協力をお願いいたします。',
+    description: '納付書をお持ちでない方は八丈町役場までお問い合わせください。',
+    category: 'イベント',
+    created_at: new Date().toISOString(),
+    work_date: '納期限：各期限まで',
+    reward_type: 'free',
+    contact: '八丈町役場 税務課',
+    age_friendly: false,
+    tags: ['#住民税', '#納税', '#八丈町']
+  }
+]
+
 const categoryColors = {
   '不動産': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-blue-800 shadow-md',
   '仕事': 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-2 border-emerald-800 shadow-md',
-  '不用品': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-2 border-orange-700 shadow-md'
+  '不用品': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-2 border-orange-700 shadow-md',
+  '農業': 'bg-gradient-to-r from-green-600 to-green-700 text-white border-2 border-green-800 shadow-md',
+  'イベント': 'bg-gradient-to-r from-purple-600 to-purple-700 text-white border-2 border-purple-800 shadow-md',
+  'ボランティア': 'bg-gradient-to-r from-pink-600 to-pink-700 text-white border-2 border-pink-800 shadow-md'
 }
 
-const categories = ['すべて', '不動産', '仕事', '不用品']
+const categories = ['すべて', '不動産', '仕事', '不用品', '農業', 'イベント', 'ボランティア']
 const categoryIcons = {
   'すべて': '',
   '不動産': '🏠 ',
   '仕事': '💼 ',
-  '不用品': '📦 '
+  '不用品': '📦 ',
+  '農業': '🌱 ',
+  'イベント': '🎉 ',
+  'ボランティア': '🤝 '
 }
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([])
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([])
   const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
@@ -44,7 +80,8 @@ export default function HomePage() {
     }
   }, [])
 
-  useEffect(() => {
+  // パフォーマンス最適化: useMemoでフィルタリング処理をメモ化
+  const filteredPosts = useMemo(() => {
     let filtered = posts
 
     // 島民以外は仕事カテゴリを除外
@@ -54,11 +91,16 @@ export default function HomePage() {
     }
 
     if (selectedCategory === 'すべて') {
-      setFilteredPosts(filtered)
+      return filtered
     } else {
-      setFilteredPosts(filtered.filter(post => post.category === selectedCategory))
+      return filtered.filter(post => post.category === selectedCategory)
     }
   }, [posts, selectedCategory, hasAskedPermission, locationResult])
+
+  // 島民判定のメモ化
+  const isIslander = useMemo(() => {
+    return hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
+  }, [hasAskedPermission, locationResult])
 
   const fetchPosts = async () => {
     try {
@@ -69,13 +111,15 @@ export default function HomePage() {
 
       if (error) {
         console.error('Supabase error:', error)
-        setPosts([])
+        setPosts(advertisementCards) // エラー時は広告カードのみ表示
       } else if (data) {
-        setPosts(data)
+        // 広告カードを通常の投稿に混合
+        const allPosts = [...advertisementCards, ...data]
+        setPosts(allPosts)
       }
     } catch (error) {
       console.error('Fetch error:', error)
-      setPosts([])
+      setPosts(advertisementCards) // エラー時は広告カードのみ表示
     } finally {
       setLoading(false)
     }
@@ -83,7 +127,6 @@ export default function HomePage() {
 
   const handleCategoryClick = (category: string) => {
     // 島外から仕事カテゴリを選択しようとした場合の処理
-    const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
     if (category === '仕事' && !isIslander) {
       // 何もしない（ボタンを無効化）
       return
@@ -197,7 +240,6 @@ export default function HomePage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-2">
           {categories.map((category) => {
-            const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
             const isJobsRestricted = category === '仕事' && !isIslander
 
             return (
@@ -254,7 +296,7 @@ export default function HomePage() {
       </div>
 
       {/* 仕事カテゴリが選択されているが島民でない場合のアクセス拒否 */}
-      {selectedCategory === '仕事' && (!hasAskedPermission || locationResult.status !== 'success' || !locationResult.isInHachijo) ? (
+      {selectedCategory === '仕事' && !isIslander ? (
         <SimpleAccessDenied type="jobs" />
       ) : viewMode === 'list' ? (
         // リスト表示
@@ -292,7 +334,10 @@ export default function HomePage() {
                             <span className="text-lg">
                               {post.category === '不動産' ? '🏠' :
                                post.category === '仕事' ? '💼' :
-                               post.category === '不用品' ? '📦' : '📝'}
+                               post.category === '不用品' ? '📦' :
+                               post.category === '農業' ? '🌱' :
+                               post.category === 'イベント' ? '🎉' :
+                               post.category === 'ボランティア' ? '🤝' : '📝'}
                             </span>
                           </div>
                         )}
@@ -305,7 +350,20 @@ export default function HomePage() {
                           <h3 className="font-medium text-gray-900 text-sm leading-tight truncate flex-1">
                             {post.title}
                           </h3>
-                          {post.price !== null && post.price !== undefined ? (
+{/* 報酬表示 */}
+                          {post.reward_type === 'non_money' ? (
+                            <span className="font-bold text-base text-green-600 flex-shrink-0">
+                              {post.reward_details || '非金銭報酬'}
+                            </span>
+                          ) : post.reward_type === 'both' ? (
+                            <span className="font-bold text-base text-blue-600 flex-shrink-0">
+                              混合報酬
+                            </span>
+                          ) : post.reward_type === 'free' ? (
+                            <span className="font-bold text-base text-purple-600 flex-shrink-0">
+                              無償・体験
+                            </span>
+                          ) : post.price !== null && post.price !== undefined ? (
                             <span className="font-bold text-lg text-red-600 flex-shrink-0">
                               ¥{post.price.toLocaleString()}
                             </span>
@@ -316,18 +374,34 @@ export default function HomePage() {
                           )}
                         </div>
 
-                        {/* 2行目: 説明 + メタ情報 */}
+                        {/* 2行目: 説明 + 追加情報 */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <p className="text-gray-600 text-xs truncate flex-1">
                               {post.description}
                             </p>
+                            {/* 作業日時の簡易表示 */}
+                            {post.work_date && (
+                              <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded flex-shrink-0">
+                                📅
+                              </span>
+                            )}
+                            {/* 年少者可能フラグ */}
+                            {post.age_friendly && (
+                              <span className="text-xs text-green-600 bg-green-50 px-1 rounded flex-shrink-0">
+                                👦
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
                               post.category === '不動産' ? 'bg-blue-100 text-blue-700' :
                               post.category === '仕事' ? 'bg-green-100 text-green-700' :
-                              'bg-orange-100 text-orange-700'
+                              post.category === '不用品' ? 'bg-orange-100 text-orange-700' :
+                              post.category === '農業' ? 'bg-green-100 text-green-700' :
+                              post.category === 'イベント' ? 'bg-purple-100 text-purple-700' :
+                              post.category === 'ボランティア' ? 'bg-pink-100 text-pink-700' :
+                              'bg-gray-100 text-gray-700'
                             }`}>
                               {post.category}
                             </span>
@@ -398,12 +472,18 @@ export default function HomePage() {
                         <div className="text-6xl mb-4">
                           {post.category === '不動産' ? '🏠' :
                            post.category === '仕事' ? '💼' :
-                           post.category === '不用品' ? '📦' : '📝'}
+                           post.category === '不用品' ? '📦' :
+                           post.category === '農業' ? '🌱' :
+                           post.category === 'イベント' ? '🎉' :
+                           post.category === 'ボランティア' ? '🤝' : '📝'}
                         </div>
                         <div className="text-slate-500 font-medium text-lg">
                           {post.category === '不動産' ? '不動産情報' :
                            post.category === '仕事' ? '求人情報' :
-                           post.category === '不用品' ? '不用品情報' : '投稿'}
+                           post.category === '不用品' ? '不用品情報' :
+                           post.category === '農業' ? '農業・作業募集' :
+                           post.category === 'イベント' ? 'イベント情報' :
+                           post.category === 'ボランティア' ? 'ボランティア募集' : '投稿'}
                         </div>
                         <div className="text-slate-400 text-sm mt-2">
                           画像なし
@@ -419,11 +499,24 @@ export default function HomePage() {
                       <Badge className={categoryColors[post.category as keyof typeof categoryColors]}>
                         {post.category}
                       </Badge>
-                      {post.price !== null && post.price !== undefined && (
+{/* 報酬表示 */}
+                      {post.reward_type === 'non_money' ? (
+                        <span className="font-bold text-sm text-green-600 max-w-24 truncate">
+                          {post.reward_details || '非金銭報酬'}
+                        </span>
+                      ) : post.reward_type === 'both' ? (
+                        <span className="font-bold text-sm text-blue-600">
+                          混合報酬
+                        </span>
+                      ) : post.reward_type === 'free' ? (
+                        <span className="font-bold text-sm text-purple-600">
+                          無償・体験
+                        </span>
+                      ) : post.price !== null && post.price !== undefined ? (
                         <span className="font-bold text-xl text-emerald-600">
                           ¥{post.price.toLocaleString()}
                         </span>
-                      )}
+                      ) : null}
                     </div>
                     <h3 className="font-semibold text-xl mb-3 line-clamp-2">
                       {post.title}

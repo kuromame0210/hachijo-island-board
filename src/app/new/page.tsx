@@ -80,7 +80,11 @@ export default function NewPost() {
       // 画像をアップロード
       const imageUrls = await uploadImages()
 
-      // 投稿を作成（シンプルなSupabase呼び出し）
+      // タグの処理（カンマ区切りの文字列を配列に変換）
+      const tagsString = formData.get('tags') as string
+      const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : []
+
+      // 投稿を作成（新フィールド対応）
       const { error } = await supabase.from('hachijo_post_board').insert({
         title: formData.get('title'),
         description: formData.get('description'),
@@ -88,7 +92,15 @@ export default function NewPost() {
         price: formData.get('price') ? Number(formData.get('price')) : null,
         contact: formData.get('contact'),
         images: imageUrls,
-        image_url: imageUrls.length > 0 ? imageUrls[0] : null
+        image_url: imageUrls.length > 0 ? imageUrls[0] : null,
+        // 新フィールド
+        work_date: formData.get('work_date'),
+        conditions: formData.get('conditions'),
+        tags: tagsArray,
+        reward_type: formData.get('reward_type'),
+        reward_details: formData.get('reward_details'),
+        requirements: formData.get('requirements'),
+        age_friendly: formData.get('age_friendly') === 'on'
       })
 
       if (!error) {
@@ -127,6 +139,9 @@ export default function NewPost() {
               <SelectItem value="不動産">🏠 不動産</SelectItem>
               <SelectItem value="仕事">💼 仕事</SelectItem>
               <SelectItem value="不用品">📦 不用品</SelectItem>
+              <SelectItem value="農業">🌱 農業</SelectItem>
+              <SelectItem value="イベント">🎉 イベント</SelectItem>
+              <SelectItem value="ボランティア">🤝 ボランティア</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -152,12 +167,39 @@ export default function NewPost() {
 
         <div>
           <label className="text-sm font-medium mb-2 block">
-            価格（円）
+            報酬・対価の種別
+          </label>
+          <Select name="reward_type" required>
+            <SelectTrigger>
+              <SelectValue placeholder="選択してください" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="money">💰 金銭報酬</SelectItem>
+              <SelectItem value="non_money">🎁 非金銭報酬（物品・サービス）</SelectItem>
+              <SelectItem value="both">💎 混合報酬（金銭＋物品等）</SelectItem>
+              <SelectItem value="free">🤝 無償・体験</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">
+            報酬・対価の詳細
+          </label>
+          <Input
+            name="reward_details"
+            placeholder="例: 時給1000円、収穫物のお裾分け、入場無料など"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">
+            価格（円）※金銭報酬の場合
           </label>
           <Input
             name="price"
             type="number"
-            placeholder="無料の場合は空欄"
+            placeholder="金銭報酬がある場合のみ入力"
           />
         </div>
 
@@ -195,6 +237,59 @@ export default function NewPost() {
               </div>
             )}
           </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">
+            作業・実施日時
+          </label>
+          <Input
+            name="work_date"
+            placeholder="例: 11月29日(土)、30(日)、毎週土日など"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">
+            参加・応募条件
+          </label>
+          <Textarea
+            name="requirements"
+            rows={3}
+            placeholder="例: 軍手・作業着持参、普通免許必要、年齢制限なし"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">
+            条件・注意事項
+          </label>
+          <Textarea
+            name="conditions"
+            rows={3}
+            placeholder="例: 雨天中止、道具は貸与、飲み物持参など"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 block">
+            タグ（複数可、カンマ区切り）
+          </label>
+          <Input
+            name="tags"
+            placeholder="例: #八丈島, #農業体験, #レモン"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              name="age_friendly"
+              className="rounded border-gray-300"
+            />
+            年少者（高校生・中学生等）参加可能
+          </label>
         </div>
 
         <div>

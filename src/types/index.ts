@@ -13,6 +13,14 @@ export interface Post {
   author?: string
   contact?: string
   contact_info?: string
+  // 新しい汎用フィールド
+  work_date?: string
+  conditions?: string
+  tags?: string[]
+  reward_type?: 'money' | 'non_money' | 'both' | 'free'
+  reward_details?: string
+  requirements?: string
+  age_friendly?: boolean
 }
 
 export interface LocationResult {
@@ -32,7 +40,7 @@ export interface LocationData {
   timestamp: number
 }
 
-export type Category = '不動産' | '仕事' | '不用品' | 'すべて'
+export type Category = '不動産' | '仕事' | '不用品' | '農業' | 'イベント' | 'ボランティア' | 'すべて'
 
 export interface Theme {
   name: string
