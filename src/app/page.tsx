@@ -10,36 +10,59 @@ import { useLocation } from '@/hooks/useLocation'
 import { SimpleAccessDenied } from '@/components/AccessDenied'
 import { Post } from '@/types'
 
-// ハードコードされた広告カード
+// ============================================================
+// デモ用広告カード（ハードコーディング）
+// 本番環境では削除するか、データベースから取得する
+//
+// TODO: データベースに移行する場合の実装方針
+// 1. hachijo_post_boardテーブルに`is_ad: boolean`カラムを追加
+// 2. 広告レコードには`is_ad = true`を設定
+// 3. 一覧取得時に`WHERE is_ad = false`で広告を除外するか、
+//    広告専用のクエリで取得して上部に表示
+// 4. カテゴリ「広告」を維持するか、is_adフラグで判別するか検討
+// ============================================================
 const advertisementCards: Post[] = [
   {
     id: 'ad-freesia-festival',
-    title: 'フリージア祭り開催中！',
-    content: '八丈島の春を彩るフリージア祭りが開催中です。美しい花々と共に島の魅力をお楽しみください。',
-    description: '3月上旬から4月上旬まで開催。無料シャトルバス運行中。',
-    category: 'イベント',
-    created_at: new Date().toISOString(),
-    work_date: '3月上旬〜4月上旬',
+    title: '🌸 八丈島フリージアまつり 2025',
+    content: `八丈島の春を彩る「フリージアまつり」が今年も開催されます！
+
+色とりどりのフリージアが咲き誇る八形山の特設会場で、約35万本のフリージアをお楽しみいただけます。無料シャトルバスも運行しており、島内各所からアクセス可能です。
+
+期間中は、フリージアの摘み取り体験や地元特産品の販売、ステージイベントなども予定しています。春の八丈島で、美しい花々と共に素敵な時間をお過ごしください。`,
+    description: '2025年3月22日(土)～4月6日(日)開催。入場無料・無料シャトルバス運行。',
+    category: '広告',
+    created_at: new Date('2025-03-01').toISOString(),
+    work_date: '2025年3月22日(土)～4月6日(日)',
     reward_type: 'free',
-    reward_details: '入場無料・記念品プレゼント',
-    contact: '八丈島観光協会',
+    reward_details: '入場無料',
+    requirements: '特になし。どなたでもご参加いただけます。',
+    conditions: '天候により内容が変更になる場合があります。',
+    contact: '(一社)八丈島観光協会 TEL: 04996-2-1377',
     age_friendly: true,
-    tags: ['#フリージア祭り', '#八丈島', '#春のイベント']
+    tags: ['広告', '#フリージア祭り', '#八丈島', '#春のイベント', '#観光'],
+    images: []
   },
   {
     id: 'ad-tax-reminder',
-    title: '住民税の納付をお忘れなく',
-    content: '令和6年度住民税の納付期限が近づいています。期限内の納付にご協力をお願いいたします。',
-    description: '納付書をお持ちでない方は八丈町役場までお問い合わせください。',
-    category: 'イベント',
-    created_at: new Date().toISOString(),
-    work_date: '納期限：各期限まで',
+    title: '📋 令和6年度 住民税納付のご案内',
+    content: `令和6年度住民税の納付期限が近づいています。
+
+納付書をお持ちの方は、各金融機関またはコンビニエンスストアでお支払いください。納付書を紛失された方や、お手元に届いていない方は、八丈町役場税務課までご連絡ください。
+
+口座振替をご利用の方は、残高不足にご注意ください。納付が困難な場合は、分納のご相談も承っておりますので、お気軽にお問い合わせください。`,
+    description: '期限内の納付にご協力をお願いいたします。',
+    category: '広告',
+    created_at: new Date('2025-09-01').toISOString(),
+    work_date: '納期限：第1期 6月末、第2期 8月末、第3期 10月末、第4期 1月末',
     reward_type: 'free',
-    contact: '八丈町役場 税務課',
+    contact: '八丈町役場 税務課 TEL: 04996-2-1121',
     age_friendly: false,
-    tags: ['#住民税', '#納税', '#八丈町']
+    tags: ['広告', '#住民税', '#納税', '#八丈町', '#お知らせ'],
+    images: []
   }
 ]
+// ============================================================
 
 const categoryColors = {
   '不動産': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-blue-800 shadow-md',
@@ -357,7 +380,7 @@ export default function HomePage() {
                             </span>
                           ) : post.reward_type === 'both' ? (
                             <span className="font-bold text-base text-blue-600 flex-shrink-0">
-                              混合報酬
+                              {post.reward_details || '金銭+現物'}
                             </span>
                           ) : post.reward_type === 'free' ? (
                             <span className="font-bold text-base text-purple-600 flex-shrink-0">
@@ -384,6 +407,12 @@ export default function HomePage() {
                             {post.work_date && (
                               <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded flex-shrink-0">
                                 📅
+                              </span>
+                            )}
+                            {/* 参加条件 */}
+                            {post.requirements && (
+                              <span className="text-xs text-purple-600 bg-purple-50 px-1 rounded flex-shrink-0">
+                                📋
                               </span>
                             )}
                             {/* 年少者可能フラグ */}
@@ -505,8 +534,8 @@ export default function HomePage() {
                           {post.reward_details || '非金銭報酬'}
                         </span>
                       ) : post.reward_type === 'both' ? (
-                        <span className="font-bold text-sm text-blue-600">
-                          混合報酬
+                        <span className="font-bold text-sm text-blue-600 max-w-32 truncate">
+                          {post.reward_details || '金銭+現物'}
                         </span>
                       ) : post.reward_type === 'free' ? (
                         <span className="font-bold text-sm text-purple-600">
@@ -521,9 +550,27 @@ export default function HomePage() {
                     <h3 className="font-semibold text-xl mb-3 line-clamp-2">
                       {post.title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-3">
+                    <p className="text-gray-600 line-clamp-3 mb-2">
                       {post.description}
                     </p>
+                    {/* アイコン表示 */}
+                    <div className="flex gap-2 items-center">
+                      {post.work_date && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          📅
+                        </span>
+                      )}
+                      {post.requirements && (
+                        <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                          📋
+                        </span>
+                      )}
+                      {post.age_friendly && (
+                        <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                          👦
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-400 mt-4">
                       {mounted ? new Date(post.created_at).toLocaleDateString('ja-JP') : '--/--/--'}
                     </p>

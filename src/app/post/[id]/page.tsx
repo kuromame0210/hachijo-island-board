@@ -8,6 +8,57 @@ import Link from 'next/link'
 import AdBanner from '@/components/ads/AdBanner'
 import { Post } from '@/types'
 
+// ============================================================
+// デモ用広告データ（page.tsxと同期）
+// 本番環境では削除するか、データベースから取得する
+//
+// TODO: データベースに移行する場合
+// - is_adフラグを使って広告を判別
+// - 通常の投稿と同じテーブルから取得可能にする
+// ============================================================
+const advertisementCards: Post[] = [
+  {
+    id: 'ad-freesia-festival',
+    title: '🌸 八丈島フリージアまつり 2025',
+    content: `八丈島の春を彩る「フリージアまつり」が今年も開催されます！
+
+色とりどりのフリージアが咲き誇る八形山の特設会場で、約35万本のフリージアをお楽しみいただけます。無料シャトルバスも運行しており、島内各所からアクセス可能です。
+
+期間中は、フリージアの摘み取り体験や地元特産品の販売、ステージイベントなども予定しています。春の八丈島で、美しい花々と共に素敵な時間をお過ごしください。`,
+    description: '2025年3月22日(土)～4月6日(日)開催。入場無料・無料シャトルバス運行。',
+    category: '広告',
+    created_at: new Date('2025-03-01').toISOString(),
+    work_date: '2025年3月22日(土)～4月6日(日)',
+    reward_type: 'free',
+    reward_details: '入場無料',
+    requirements: '特になし。どなたでもご参加いただけます。',
+    conditions: '天候により内容が変更になる場合があります。',
+    contact: '(一社)八丈島観光協会 TEL: 04996-2-1377',
+    age_friendly: true,
+    tags: ['広告', '#フリージア祭り', '#八丈島', '#春のイベント', '#観光'],
+    images: []
+  },
+  {
+    id: 'ad-tax-reminder',
+    title: '📋 令和6年度 住民税納付のご案内',
+    content: `令和6年度住民税の納付期限が近づいています。
+
+納付書をお持ちの方は、各金融機関またはコンビニエンスストアでお支払いください。納付書を紛失された方や、お手元に届いていない方は、八丈町役場税務課までご連絡ください。
+
+口座振替をご利用の方は、残高不足にご注意ください。納付が困難な場合は、分納のご相談も承っておりますので、お気軽にお問い合わせください。`,
+    description: '期限内の納付にご協力をお願いいたします。',
+    category: '広告',
+    created_at: new Date('2025-09-01').toISOString(),
+    work_date: '納期限：第1期 6月末、第2期 8月末、第3期 10月末、第4期 1月末',
+    reward_type: 'free',
+    contact: '八丈町役場 税務課 TEL: 04996-2-1121',
+    age_friendly: false,
+    tags: ['広告', '#住民税', '#納税', '#八丈町', '#お知らせ'],
+    images: []
+  }
+]
+// ============================================================
+
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
@@ -16,6 +67,16 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   useEffect(() => {
     const fetchPost = async () => {
       const { id } = await params
+
+      // デモ用: 広告IDの場合はハードコードされたデータを返す
+      if (id.startsWith('ad-')) {
+        const adPost = advertisementCards.find(ad => ad.id === id)
+        setPost(adPost || null)
+        setLoading(false)
+        return
+      }
+
+      // 通常の投稿はデータベースから取得
       const { data } = await supabase
         .from('hachijo_post_board')
         .select('*')
@@ -104,22 +165,22 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* 報酬・対価情報 */}
           {(post.reward_type || post.reward_details) && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
               <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
                 💰 報酬・対価
               </h4>
               {post.reward_type && (
-                <p className="text-sm text-gray-700 mb-1">
+                <p className="text-base text-gray-700 mb-1">
                   <span className="font-medium">種別:</span> {
                     post.reward_type === 'money' ? '💰 金銭報酬' :
                     post.reward_type === 'non_money' ? '🎁 非金銭報酬' :
-                    post.reward_type === 'both' ? '💎 混合報酬' :
+                    post.reward_type === 'both' ? '💎 金銭+現物' :
                     '🤝 無償・体験'
                   }
                 </p>
               )}
               {post.reward_details && (
-                <p className="text-sm text-gray-700">
+                <p className="text-base text-gray-700">
                   <span className="font-medium">詳細:</span> {post.reward_details}
                 </p>
               )}
@@ -128,31 +189,31 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
           {/* 作業日時 */}
           {post.work_date && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
               <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
                 📅 実施日時
               </h4>
-              <p className="text-sm text-gray-700">{post.work_date}</p>
+              <p className="text-base text-gray-700">{post.work_date}</p>
             </div>
           )}
 
           {/* 参加条件 */}
           {post.requirements && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
               <h4 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
                 📋 参加・応募条件
               </h4>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{post.requirements}</p>
+              <p className="text-base text-gray-700 whitespace-pre-wrap">{post.requirements}</p>
             </div>
           )}
 
           {/* 注意事項 */}
           {post.conditions && (
-            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-lg border border-orange-200">
               <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2">
                 ⚠️ 条件・注意事項
               </h4>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{post.conditions}</p>
+              <p className="text-base text-gray-700 whitespace-pre-wrap">{post.conditions}</p>
             </div>
           )}
         </div>

@@ -176,7 +176,7 @@ export default function NewPost() {
             <SelectContent>
               <SelectItem value="money">💰 金銭報酬</SelectItem>
               <SelectItem value="non_money">🎁 非金銭報酬（物品・サービス）</SelectItem>
-              <SelectItem value="both">💎 混合報酬（金銭＋物品等）</SelectItem>
+              <SelectItem value="both">💎 金銭+現物</SelectItem>
               <SelectItem value="free">🤝 無償・体験</SelectItem>
             </SelectContent>
           </Select>

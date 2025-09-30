@@ -116,8 +116,8 @@ export function useLocation() {
         const lastChecked = data.lastChecked || 0
         const now = Date.now()
 
-        // 1時間以内のキャッシュなら使用
-        if (now - lastChecked < 3600000) {
+        // 1週間以内のキャッシュなら使用
+        if (now - lastChecked < 604800000) { // 7日 * 24時間 * 60分 * 60秒 * 1000ミリ秒
           setLocationResult(prev => ({
             ...prev,
             isInHachijo: data.isInHachijo,
