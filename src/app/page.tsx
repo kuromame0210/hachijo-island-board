@@ -88,7 +88,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [mounted, setMounted] = useState(false)
-  const { locationResult, hasAskedPermission, requestLocation } = useLocation()
+  const { locationResult, hasAskedPermission, requestLocation, lastChecked } = useLocation()
 
   useEffect(() => {
     fetchPosts()
@@ -239,11 +239,30 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            {locationResult.distance !== null && (
-              <div className="text-sm text-slate-600">
-                <p>現在地から八丈島まで約 {locationResult.distance}km</p>
-              </div>
-            )}
+            <div className="space-y-3">
+              {locationResult.distance !== null && (
+                <div className="text-sm text-slate-600">
+                  <p>現在地から八丈島まで約 {locationResult.distance}km</p>
+                </div>
+              )}
+              {lastChecked && (
+                <div className="text-xs text-slate-500">
+                  最終検出: {new Date(lastChecked).toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+              )}
+              <button
+                onClick={requestLocation}
+                className="px-6 py-3 text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-xl transition-all shadow-lg transform hover:scale-105"
+              >
+                位置情報を再検出する
+              </button>
+            </div>
           </div>
         </div>
       </div>

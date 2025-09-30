@@ -11,6 +11,7 @@ export function useLocation() {
     error: null,
     status: 'success' // 初期状態は'success'にして無限ローディングを防ぐ
   })
+  const [lastChecked, setLastChecked] = useState<number | null>(null)
 
   const [hasAskedPermission, setHasAskedPermission] = useState(false)
   const [, setHasConfirmedLocation] = useState(false)
@@ -46,6 +47,7 @@ export function useLocation() {
         const isInHachijo = true // テスト用に八丈島内とする
         const distance = 0
 
+        const timestamp = Date.now()
         setLocationResult({
           isInHachijo,
           distance,
@@ -53,12 +55,13 @@ export function useLocation() {
           error: null,
           status: 'success'
         })
+        setLastChecked(timestamp)
         setHasConfirmedLocation(true)
         localStorage.setItem('hachijo-location-status', JSON.stringify({
           isInHachijo,
           distance,
           location: testLocation,
-          lastChecked: Date.now()
+          lastChecked: timestamp
         }))
         console.log('開発環境：位置情報取得完了（テストデータ）')
         return
@@ -70,14 +73,16 @@ export function useLocation() {
       console.log('GPS結果:', gpsResult)
 
       if (gpsResult.status === 'success') {
+        const timestamp = Date.now()
         setLocationResult(gpsResult)
+        setLastChecked(timestamp)
         setHasConfirmedLocation(true)
         // ローカルストレージに保存（プライバシーに配慮して簡素化）
         localStorage.setItem('hachijo-location-status', JSON.stringify({
           isInHachijo: gpsResult.isInHachijo,
           distance: gpsResult.distance,
           location: gpsResult.location,
-          lastChecked: Date.now()
+          lastChecked: timestamp
         }))
         console.log('位置情報取得成功')
       } else if (gpsResult.status === 'denied') {
@@ -116,8 +121,8 @@ export function useLocation() {
         const lastChecked = data.lastChecked || 0
         const now = Date.now()
 
-        // 1週間以内のキャッシュなら使用
-        if (now - lastChecked < 604800000) { // 7日 * 24時間 * 60分 * 60秒 * 1000ミリ秒
+        // 24時間以内のキャッシュなら使用
+        if (now - lastChecked < 86400000) { // 24時間 * 60分 * 60秒 * 1000ミリ秒
           setLocationResult(prev => ({
             ...prev,
             isInHachijo: data.isInHachijo,
@@ -125,22 +130,30 @@ export function useLocation() {
             location: data.location || null,
             status: 'success'
           }))
+          setLastChecked(lastChecked)
           setHasAskedPermission(true)
           return
         }
+
+        // キャッシュが24時間以上経過している場合は自動的に再取得
+        console.log('キャッシュ期限切れ：位置情報を自動再取得します')
+        requestLocation()
+        return
       } catch (e) {
         console.warn('位置情報キャッシュの解析に失敗:', e)
       }
     }
 
-    // 自動的に位置情報をリクエストしない（ユーザーの許可待ち）
-    setLocationResult(prev => ({ ...prev, status: 'success' }))
+    // キャッシュが存在しない場合も自動的に位置情報を取得
+    console.log('キャッシュなし：位置情報を自動取得します')
+    requestLocation()
   }, [])
 
   return {
     locationResult,
     requestLocation,
     hasAskedPermission: isHydrated ? hasAskedPermission : false, // SSR中は常にfalse
-    isLoading: locationResult.status === 'loading'
+    isLoading: locationResult.status === 'loading',
+    lastChecked
   }
 }

@@ -13,7 +13,7 @@ interface FeatureStatus {
 }
 
 export default function LocationRestrictionStatus() {
-  const { locationResult, hasAskedPermission, requestLocation, isLoading } = useLocation()
+  const { locationResult, hasAskedPermission, requestLocation, isLoading, lastChecked } = useLocation()
 
   const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
 
@@ -198,6 +198,11 @@ export default function LocationRestrictionStatus() {
               {locationResult.distance !== null && (
                 <div>
                   <span className="font-medium">八丈島からの距離:</span> 約{locationResult.distance}km
+                </div>
+              )}
+              {lastChecked && (
+                <div>
+                  <span className="font-medium">最終検出:</span> {new Date(lastChecked).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </div>
               )}
               <div className="text-xs text-gray-500 mt-2">
