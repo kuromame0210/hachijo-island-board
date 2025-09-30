@@ -1,17 +1,17 @@
 export interface Post {
   id: string
   title: string
-  content: string
-  description?: string
+  description: string  // 必須フィールド（データベーススキーマに合わせて修正）
   category: string
-  location?: string
+  contact: string  // 必須フィールド
   created_at: string
+  // オプショナルフィールド
+  location?: string
   updated_at?: string
   images?: string[]
   image_url?: string
   price?: number | null
   author?: string
-  contact?: string
   contact_info?: string
   // 新しい汎用フィールド
   work_date?: string
@@ -21,6 +21,8 @@ export interface Post {
   reward_details?: string
   requirements?: string
   age_friendly?: boolean
+  // TODO: 広告フラグ（未実装）
+  // is_ad?: boolean  // データベースに is_ad カラムを追加後に有効化
 }
 
 export interface LocationResult {

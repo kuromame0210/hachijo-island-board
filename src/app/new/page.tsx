@@ -292,6 +292,29 @@ export default function NewPost() {
           </label>
         </div>
 
+        {/* TODO: 広告フラグ（仮実装・現在未対応）
+            データベースに is_ad カラムを追加するまで機能しません
+            現在はデモ用にフロント表示のみ */}
+        <div className="border border-yellow-300 bg-yellow-50 p-4 rounded-lg">
+          <label className="text-sm font-medium mb-2 flex items-center gap-2 text-gray-500">
+            <input
+              type="checkbox"
+              name="is_ad"
+              className="rounded border-gray-300"
+              disabled
+            />
+            <span className="flex items-center gap-2">
+              広告として投稿
+              <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded">
+                仮実装・未対応
+              </span>
+            </span>
+          </label>
+          <p className="text-xs text-gray-500 mt-1 ml-6">
+            ※現在この機能は実装されていません。データベース対応後に有効化されます。
+          </p>
+        </div>
+
         <div>
           <label className="text-sm font-medium mb-2 block">
             連絡先
