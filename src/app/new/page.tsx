@@ -16,6 +16,7 @@ export default function NewPost() {
   const [loading, setLoading] = useState(false)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const { locationResult, hasAskedPermission } = useLocation()
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,11 +85,14 @@ export default function NewPost() {
       const tagsString = formData.get('tags') as string
       const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : []
 
+      // カテゴリのデフォルト値設定
+      const category = formData.get('category') || '未設定'
+
       // 投稿を作成（新フィールド対応）
       const { error } = await supabase.from('hachijo_post_board').insert({
         title: formData.get('title'),
         description: formData.get('description'),
-        category: formData.get('category'),
+        category: category,
         price: formData.get('price') ? Number(formData.get('price')) : null,
         contact: formData.get('contact'),
         images: imageUrls,
@@ -124,88 +128,19 @@ export default function NewPost() {
 
   return (
     <Card className="max-w-2xl mx-auto">
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        <h1 className="text-2xl font-semibold">新規投稿</h1>
-
+      <form onSubmit={handleSubmit} className="p-6 space-y-8">
         <div>
-          <label className="text-sm font-medium mb-2 block">
-            カテゴリ
-          </label>
-          <Select name="category" required>
-            <SelectTrigger>
-              <SelectValue placeholder="選択してください" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="不動産">🏠 不動産</SelectItem>
-              <SelectItem value="仕事">💼 仕事</SelectItem>
-              <SelectItem value="不用品">📦 不用品</SelectItem>
-              <SelectItem value="農業">🌱 農業</SelectItem>
-              <SelectItem value="イベント">🎉 イベント</SelectItem>
-              <SelectItem value="ボランティア">🤝 ボランティア</SelectItem>
-            </SelectContent>
-          </Select>
+          <h1 className="text-3xl font-bold mb-2">新規投稿</h1>
+          <p className="text-gray-600">
+            <span className="text-red-600 font-bold">※</span> は必須項目です
+          </p>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            タイトル
-          </label>
-          <Input name="title" required placeholder="例: 2LDKアパート賃貸" />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            説明
-          </label>
-          <Textarea
-            name="description"
-            required
-            rows={5}
-            placeholder="詳細な説明を入力してください"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            報酬・対価の種別
-          </label>
-          <Select name="reward_type" required>
-            <SelectTrigger>
-              <SelectValue placeholder="選択してください" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="money">💰 金銭報酬</SelectItem>
-              <SelectItem value="non_money">🎁 非金銭報酬（物品・サービス）</SelectItem>
-              <SelectItem value="both">💎 金銭+現物</SelectItem>
-              <SelectItem value="free">🤝 無償・体験</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            報酬・対価の詳細
-          </label>
-          <Input
-            name="reward_details"
-            placeholder="例: 時給1000円、収穫物のお裾分け、入場無料など"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            価格（円）※金銭報酬の場合
-          </label>
-          <Input
-            name="price"
-            type="number"
-            placeholder="金銭報酬がある場合のみ入力"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            画像（最大5枚）
+        {/* 1. 画像 - 最優先 */}
+        <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+          <label className="text-lg font-bold mb-3 block flex items-center gap-2">
+            <span className="text-3xl">📸</span>
+            写真を載せましょう（最大5枚）
           </label>
           <div className="space-y-4">
             <Input
@@ -214,6 +149,7 @@ export default function NewPost() {
               multiple
               onChange={handleImageSelect}
               disabled={selectedImages.length >= 5}
+              className="text-base"
             />
 
             {imagePreviews.length > 0 && (
@@ -228,7 +164,7 @@ export default function NewPost() {
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 transition-colors duration-200"
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg hover:bg-red-600 transition-colors duration-200"
                     >
                       ×
                     </button>
@@ -239,105 +175,234 @@ export default function NewPost() {
           </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            作業・実施日時
+        {/* 2. 報酬・メリット */}
+        <div className="bg-green-50 p-6 rounded-lg border-2 border-green-200">
+          <label className="text-lg font-bold mb-3 block flex items-center gap-2">
+            <span className="text-3xl">💰</span>
+            いくらですか？何がもらえますか？
+            <span className="text-red-600 text-xl">※</span>
           </label>
+          <p className="text-sm text-gray-600 mb-4">例: 時給1000円、野菜お裾分け、無料</p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-base font-medium mb-2 block">
+                報酬の種類 <span className="text-red-600">※</span>
+              </label>
+              <Select name="reward_type" required>
+                <SelectTrigger className="text-base">
+                  <SelectValue placeholder="選択してください" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="money">💰 金銭報酬</SelectItem>
+                  <SelectItem value="non_money">🎁 非金銭報酬（物品・サービス）</SelectItem>
+                  <SelectItem value="both">💎 金銭+現物</SelectItem>
+                  <SelectItem value="free">🤝 無償・体験</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-base font-medium mb-2 block">
+                報酬の詳細
+              </label>
+              <Input
+                name="reward_details"
+                placeholder="例: 時給1000円、収穫物のお裾分け、入場無料"
+                className="text-base"
+              />
+            </div>
+
+            <div>
+              <label className="text-base font-medium mb-2 block">
+                金額（円）
+              </label>
+              <Input
+                name="price"
+                type="number"
+                placeholder="金銭報酬がある場合のみ"
+                className="text-base"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 3. タイトル */}
+        <div>
+          <label className="text-lg font-bold mb-3 block flex items-center gap-2">
+            <span className="text-3xl">📝</span>
+            タイトルを付けましょう
+            <span className="text-red-600 text-xl">※</span>
+          </label>
+          <p className="text-sm text-gray-600 mb-3">例: レモン収穫手伝い募集、冷蔵庫あげます</p>
           <Input
-            name="work_date"
-            placeholder="例: 11月29日(土)、30(日)、毎週土日など"
+            name="title"
+            required
+            placeholder="例: レモン収穫手伝い募集"
+            className="text-lg py-6"
           />
         </div>
 
+        {/* 4. 詳細説明 */}
         <div>
-          <label className="text-sm font-medium mb-2 block">
-            参加・応募条件
+          <label className="text-lg font-bold mb-3 block flex items-center gap-2">
+            <span className="text-3xl">📄</span>
+            詳しく教えてください
+            <span className="text-red-600 text-xl">※</span>
           </label>
+          <p className="text-sm text-gray-600 mb-3">「いつ」「どこで」「何が必要」など、応募者が知りたいことを書いてください</p>
           <Textarea
-            name="requirements"
-            rows={3}
-            placeholder="例: 軍手・作業着持参、普通免許必要、年齢制限なし"
+            name="description"
+            required
+            rows={8}
+            placeholder={"例：\n・日時：11月29日(土) 9:00-15:00\n・場所：八丈町大賀郷のレモン畑\n・内容：レモンの収穫作業\n・持ち物：軍手、作業着、飲み物\n・その他：雨天中止、お昼ご飯付き"}
+            className="text-base"
           />
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            条件・注意事項
-          </label>
-          <Textarea
-            name="conditions"
-            rows={3}
-            placeholder="例: 雨天中止、道具は貸与、飲み物持参など"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            タグ（複数可、カンマ区切り）
-          </label>
-          <Input
-            name="tags"
-            placeholder="例: #八丈島, #農業体験, #レモン"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="age_friendly"
-              className="rounded border-gray-300"
-            />
-            年少者（高校生・中学生等）参加可能
-          </label>
-        </div>
-
-        {/* TODO: 広告フラグ（仮実装・現在未対応）
-            データベースに is_ad カラムを追加するまで機能しません
-            現在はデモ用にフロント表示のみ */}
-        <div className="border border-yellow-300 bg-yellow-50 p-4 rounded-lg">
-          <label className="text-sm font-medium mb-2 flex items-center gap-2 text-gray-500">
-            <input
-              type="checkbox"
-              name="is_ad"
-              className="rounded border-gray-300"
-              disabled
-            />
-            <span className="flex items-center gap-2">
-              広告として投稿
-              <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded">
-                仮実装・未対応
-              </span>
-            </span>
-          </label>
-          <p className="text-xs text-gray-500 mt-1 ml-6">
-            ※現在この機能は実装されていません。データベース対応後に有効化されます。
-          </p>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            連絡先
+        {/* 5. 連絡先 */}
+        <div className="bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200">
+          <label className="text-lg font-bold mb-3 block flex items-center gap-2">
+            <span className="text-3xl">📱</span>
+            連絡先を忘れずに！
+            <span className="text-red-600 text-xl">※</span>
           </label>
           <Input
             name="contact"
             required
             placeholder="電話番号またはメールアドレス"
+            className="text-lg py-6"
           />
         </div>
 
-        <div className="flex gap-4">
+        {/* 6. カテゴリ */}
+        <div>
+          <label className="text-lg font-bold mb-3 block flex items-center gap-2">
+            <span className="text-3xl">🏷️</span>
+            カテゴリを選んでください
+          </label>
+          <p className="text-sm text-gray-600 mb-3">未選択の場合は「未設定」になります</p>
+          <Select name="category">
+            <SelectTrigger className="text-base py-6">
+              <SelectValue placeholder="未設定" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="不動産">🏠 不動産</SelectItem>
+              <SelectItem value="仕事">💼 仕事</SelectItem>
+              <SelectItem value="不用品">📦 不用品</SelectItem>
+              <SelectItem value="農業">🌱 農業</SelectItem>
+              <SelectItem value="イベント">🎉 イベント</SelectItem>
+              <SelectItem value="ボランティア">🤝 ボランティア</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* 詳細設定（折りたたみ） */}
+        <div className="border-t pt-6">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex items-center justify-between text-left text-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 p-4 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-gray-300"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-2xl">⚙️</span>
+              詳細設定（任意）
+            </span>
+            <span className="text-2xl">{showAdvanced ? '▼' : '▶'}</span>
+          </button>
+
+          {showAdvanced && (
+            <div className="mt-6 space-y-6 pl-4">
+              <div>
+                <label className="text-base font-medium mb-2 block">
+                  作業・実施日時
+                </label>
+                <Input
+                  name="work_date"
+                  placeholder="例: 11月29日(土)、30(日)、毎週土日など"
+                />
+              </div>
+
+              <div>
+                <label className="text-base font-medium mb-2 block">
+                  参加・応募条件
+                </label>
+                <Textarea
+                  name="requirements"
+                  rows={3}
+                  placeholder="例: 軍手・作業着持参、普通免許必要、年齢制限なし"
+                />
+              </div>
+
+              <div>
+                <label className="text-base font-medium mb-2 block">
+                  条件・注意事項
+                </label>
+                <Textarea
+                  name="conditions"
+                  rows={3}
+                  placeholder="例: 雨天中止、道具は貸与、飲み物持参など"
+                />
+              </div>
+
+              <div>
+                <label className="text-base font-medium mb-2 block">
+                  タグ（複数可、カンマ区切り）
+                </label>
+                <Input
+                  name="tags"
+                  placeholder="例: #八丈島, #農業体験, #レモン"
+                />
+              </div>
+
+              <div>
+                <label className="text-base font-medium mb-2 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="age_friendly"
+                    className="w-5 h-5 rounded border-gray-300"
+                  />
+                  年少者（高校生・中学生等）参加可能
+                </label>
+              </div>
+
+              {/* TODO: 広告フラグ（仮実装・現在未対応） */}
+              <div className="border border-yellow-300 bg-yellow-50 p-4 rounded-lg">
+                <label className="text-sm font-medium mb-2 flex items-center gap-2 text-gray-500">
+                  <input
+                    type="checkbox"
+                    name="is_ad"
+                    className="w-5 h-5 rounded border-gray-300"
+                    disabled
+                  />
+                  <span className="flex items-center gap-2">
+                    広告として投稿
+                    <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded">
+                      仮実装・未対応
+                    </span>
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1 ml-7">
+                  ※現在この機能は実装されていません。データベース対応後に有効化されます。
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <Button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-lg py-6"
           >
-            {loading ? '投稿中...' : '投稿する'}
+            {loading ? '投稿中...' : '✓ 投稿する'}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push('/')}
+            className="text-base py-6 sm:w-32"
           >
             キャンセル
           </Button>
