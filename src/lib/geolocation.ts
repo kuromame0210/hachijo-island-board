@@ -13,6 +13,28 @@ export const HACHIJO_CENTER = {
   lng: 139.7853
 }
 
+// 八丈島の主要施設座標
+export const HACHIJO_LANDMARKS = {
+  airport: { 
+    lat: 33.1151, 
+    lng: 139.7858, 
+    name: "八丈島空港",
+    icon: "✈️"
+  },
+  sottodo_port: { 
+    lat: 33.1098, 
+    lng: 139.7695, 
+    name: "底土港",
+    icon: "⚓"
+  },
+  city_hall: { 
+    lat: 33.1073, 
+    lng: 139.7932, 
+    name: "八丈町役場",
+    icon: "🏛️"
+  }
+}
+
 // 距離計算用（ハーバーサイン公式）
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371 // 地球の半径（km）
@@ -39,6 +61,16 @@ export function isInHachijoIsland(lat: number, lng: number): boolean {
 // 八丈島からの距離を計算
 export function getDistanceFromHachijo(lat: number, lng: number): number {
   return calculateDistance(lat, lng, HACHIJO_CENTER.lat, HACHIJO_CENTER.lng)
+}
+
+// 主要施設までの距離を計算
+export function calculateDistanceToLandmarks(userLat: number, userLng: number) {
+  return Object.entries(HACHIJO_LANDMARKS).map(([key, landmark]) => ({
+    key,
+    name: landmark.name,
+    icon: landmark.icon,
+    distance: Math.round(calculateDistance(userLat, userLng, landmark.lat, landmark.lng) * 10) / 10
+  }))
 }
 
 // 位置情報の取得と判定
@@ -115,6 +147,75 @@ export async function detectHachijoLocation(): Promise<LocationResult> {
       options
     )
   })
+}
+
+// 八丈島の地区別郵便番号マップ
+const HACHIJO_POSTAL_CODES = {
+  '大賀郷': '〒100-1401',
+  '樫立': '〒100-1621', 
+  '末吉': '〒100-1622',
+  '中之郷': '〒100-1623',
+  '三根': '〒100-1511',
+  '底土': '〒100-1401', // 大賀郷地区に含まれる
+}
+
+// 座標から八丈島の地区を判定
+function detectHachijoDistrict(lat: number, lng: number): string | null {
+  // 大まかな地区判定（座標範囲で判定）
+  // 北部（坂下）エリア
+  if (lat > 33.105) {
+    if (lng < 139.770) return '大賀郷'
+    if (lng < 139.785) return '三根'
+    return '大賀郷'
+  }
+  
+  // 南部（坂上）エリア
+  if (lat < 33.085) {
+    if (lng < 139.770) return '末吉'
+    if (lng < 139.785) return '中之郷'
+    return '樫立'
+  }
+  
+  // 中央部
+  return '大賀郷'
+}
+
+// 逆ジオコーディング（座標から住所を取得）
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    // 八丈島内かどうかチェック
+    if (!isInHachijoIsland(lat, lng)) {
+      return `位置情報（緯度: ${lat.toFixed(4)}, 経度: ${lng.toFixed(4)}）`
+    }
+    
+    // 地区を判定
+    const district = detectHachijoDistrict(lat, lng)
+    if (district && HACHIJO_POSTAL_CODES[district]) {
+      return `${HACHIJO_POSTAL_CODES[district]} 東京都八丈島八丈町${district}`
+    }
+    
+    // フォールバック: OpenStreetMapで詳細取得を試行
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=ja`
+    )
+    const data = await response.json()
+    
+    if (data && data.display_name) {
+      // 地区名を抽出して郵便番号付きで返す
+      const displayName = data.display_name
+      for (const [districtName, postalCode] of Object.entries(HACHIJO_POSTAL_CODES)) {
+        if (displayName.includes(districtName)) {
+          return `${postalCode} 東京都八丈島八丈町${districtName}`
+        }
+      }
+    }
+    
+    // 最終フォールバック
+    return '〒100-1400 東京都八丈島八丈町'
+  } catch (error) {
+    console.error('逆ジオコーディングエラー:', error)
+    return '〒100-1400 東京都八丈島八丈町'
+  }
 }
 
 // IPアドレスベースの位置検出（フォールバック）

@@ -1,7 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { detectHachijoLocation, detectLocationByIP, LocationResult } from '@/lib/geolocation'
+import { 
+  detectHachijoLocation, 
+  detectLocationByIP, 
+  LocationResult, 
+  calculateDistanceToLandmarks, 
+  reverseGeocode 
+} from '@/lib/geolocation'
 
 export function useLocation() {
   const [locationResult, setLocationResult] = useState<LocationResult>({
@@ -12,6 +18,8 @@ export function useLocation() {
     status: 'success' // 初期状態は'success'にして無限ローディングを防ぐ
   })
   const [lastChecked, setLastChecked] = useState<number | null>(null)
+  const [address, setAddress] = useState<string | null>(null)
+  const [landmarks, setLandmarks] = useState<Array<{key: string, name: string, icon: string, distance: number}>>([])
 
   const [hasAskedPermission, setHasAskedPermission] = useState(false)
   const [, setHasConfirmedLocation] = useState(false)
@@ -77,6 +85,24 @@ export function useLocation() {
         setLocationResult(gpsResult)
         setLastChecked(timestamp)
         setHasConfirmedLocation(true)
+        
+        // 住所と施設距離を取得
+        if (gpsResult.location) {
+          const { lat, lng } = gpsResult.location
+          
+          // 住所を取得
+          try {
+            const addressResult = await reverseGeocode(lat, lng)
+            setAddress(addressResult)
+          } catch (error) {
+            console.error('住所取得エラー:', error)
+          }
+          
+          // 施設距離を計算
+          const landmarkDistances = calculateDistanceToLandmarks(lat, lng)
+          setLandmarks(landmarkDistances)
+        }
+        
         // ローカルストレージに保存（プライバシーに配慮して簡素化）
         localStorage.setItem('hachijo-location-status', JSON.stringify({
           isInHachijo: gpsResult.isInHachijo,
@@ -132,6 +158,20 @@ export function useLocation() {
           }))
           setLastChecked(lastChecked)
           setHasAskedPermission(true)
+          
+          // キャッシュされた位置情報で住所と施設距離を再計算
+          if (data.location) {
+            const { lat, lng } = data.location
+            
+            // 住所を非同期で取得
+            reverseGeocode(lat, lng)
+              .then(addressResult => setAddress(addressResult))
+              .catch(error => console.error('住所取得エラー:', error))
+            
+            const landmarkDistances = calculateDistanceToLandmarks(lat, lng)
+            setLandmarks(landmarkDistances)
+          }
+          
           return
         }
 
@@ -154,6 +194,8 @@ export function useLocation() {
     requestLocation,
     hasAskedPermission: isHydrated ? hasAskedPermission : false, // SSR中は常にfalse
     isLoading: locationResult.status === 'loading',
-    lastChecked
+    lastChecked,
+    address,
+    landmarks
   }
 }
