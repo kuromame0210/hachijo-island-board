@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import AdBanner from '@/components/ads/AdBanner'
+import GoogleMapEmbed from '@/components/GoogleMapEmbed'
 import { Post } from '@/types'
 
 // ============================================================
@@ -215,6 +216,13 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
             </div>
           )}
         </div>
+
+        {/* 地図表示 */}
+        {post.map_link && (
+          <div className="mb-8">
+            <GoogleMapEmbed mapLink={post.map_link} title="投稿の場所" />
+          </div>
+        )}
 
         {/* タグ表示 */}
         {post.tags && post.tags.length > 0 && (

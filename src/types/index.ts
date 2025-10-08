@@ -21,6 +21,8 @@ export interface Post {
   reward_details?: string
   requirements?: string
   age_friendly?: boolean
+  // 地図リンク
+  map_link?: string
   // TODO: 広告フラグ（未実装）
   // is_ad?: boolean  // データベースに is_ad カラムを追加後に有効化
 }

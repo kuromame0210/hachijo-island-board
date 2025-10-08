@@ -104,7 +104,8 @@ export default function NewPost() {
         reward_type: formData.get('reward_type'),
         reward_details: formData.get('reward_details'),
         requirements: formData.get('requirements'),
-        age_friendly: formData.get('age_friendly') === 'on'
+        age_friendly: formData.get('age_friendly') === 'on',
+        map_link: formData.get('map_link')
       })
 
       if (!error) {
@@ -352,6 +353,20 @@ export default function NewPost() {
                   placeholder="例: #八丈島, #農業体験, #レモン"
                   className="text-lg"
                 />
+              </div>
+
+              <div>
+                <label className="text-lg font-medium mb-2 block">
+                  場所（Googleマップリンク）
+                </label>
+                <Input
+                  name="map_link"
+                  placeholder="https://maps.app.goo.gl/... または https://www.google.com/maps/..."
+                  className="text-lg"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  ※Googleマップで場所を検索→共有→リンクをコピーして貼り付けてください
+                </p>
               </div>
 
               <div>
@@ -632,6 +647,20 @@ export default function NewPost() {
                     placeholder="例: #八丈島, #農業体験, #レモン"
                     className="text-lg"
                   />
+                </div>
+
+                <div>
+                  <label className="text-lg font-medium mb-2 block">
+                    場所（Googleマップリンク）
+                  </label>
+                  <Input
+                    name="map_link"
+                    placeholder="https://maps.app.goo.gl/... または https://www.google.com/maps/..."
+                    className="text-lg"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    ※Googleマップで場所を検索→共有→リンクをコピーして貼り付けてください
+                  </p>
                 </div>
 
                 <div>
