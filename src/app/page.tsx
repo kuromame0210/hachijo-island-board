@@ -286,10 +286,11 @@ export default function HomePage() {
       {/* トップバナー広告 */}
       <AdBanner size="large" type="banner" className="mb-4" />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         {/* カテゴリーボタンを追加/変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
-        <div className="flex gap-2">
-          {categoriesForFilter.map(({ key, label }) => {
+        <div className="overflow-x-auto">
+          <div className="flex gap-2 min-w-max pb-2">
+            {categoriesForFilter.map(({ key, label }) => {
             const isJobsRestricted = key === 'job' && !isIslander
             const displayIcon = key === 'all' ? '' : getCategoryIcon(key as CategoryKey)
 
@@ -298,7 +299,7 @@ export default function HomePage() {
                 key={key}
                 onClick={() => handleCategoryClick(key)}
                 disabled={isJobsRestricted}
-                className={`px-5 py-3 rounded-lg transition-all text-sm font-medium relative shadow-sm ${
+                className={`px-5 py-3 rounded-lg transition-all text-sm font-medium relative shadow-sm whitespace-nowrap ${
                   selectedCategory === key
                     ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
                     : isJobsRestricted
@@ -314,17 +315,18 @@ export default function HomePage() {
               </button>
             )
           })}
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <button
             onClick={() => {
               setViewMode('list')
               localStorage.setItem('viewMode', 'list')
             }}
-            className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+            className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
               viewMode === 'list'
-                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-md'
+                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
                 : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
             }`}
           >
@@ -335,9 +337,9 @@ export default function HomePage() {
               setViewMode('grid')
               localStorage.setItem('viewMode', 'grid')
             }}
-            className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
+            className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
               viewMode === 'grid'
-                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-md'
+                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
                 : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
             }`}
           >

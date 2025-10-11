@@ -121,11 +121,11 @@ export const getAllCategories = (): CategoryKey[] =>
 export const getSortedCategories = (): CategoryKey[] =>
   getAllCategories().sort((a, b) => CATEGORIES[a].order - CATEGORIES[b].order)
 
-export const getCategoryLabel = (key: CategoryKey): string => CATEGORIES[key].label
+export const getCategoryLabel = (key: CategoryKey): string => CATEGORIES[key]?.label || '不明'
 
-export const getCategoryIcon = (key: CategoryKey): string => CATEGORIES[key].icon
+export const getCategoryIcon = (key: CategoryKey): string => CATEGORIES[key]?.icon || '❓'
 
-export const getCategoryColor = (key: CategoryKey): string => CATEGORIES[key].color
+export const getCategoryColor = (key: CategoryKey): string => CATEGORIES[key]?.color || 'bg-gray-500 text-white'
 
 // カテゴリー選択用の配列（「すべて」含む）
 export const getCategoriesForFilter = (): Array<{key: string, label: string}> => [
