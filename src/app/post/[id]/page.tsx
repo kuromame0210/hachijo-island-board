@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import AdBanner from '@/components/ads/AdBanner'
 import GoogleMapEmbed from '@/components/GoogleMapEmbed'
+import AdminPasswordModal from '@/components/AdminPasswordModal'
 import { Post } from '@/types'
 
 // ============================================================
@@ -62,6 +63,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [showAdminModal, setShowAdminModal] = useState(false)
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -100,6 +102,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const images = post.images && post.images.length > 0 ? post.images : (post.image_url ? [post.image_url] : [])
 
   return (
+    <>
     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* メインコンテンツ */}
       <div className="lg:col-span-3">
@@ -218,9 +221,13 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         </div>
 
         {/* 地図表示 */}
-        {post.map_link && (
+        {(post.map_link || post.iframe_embed) && (
           <div className="mb-8">
-            <GoogleMapEmbed mapLink={post.map_link} title="投稿の場所" />
+            <GoogleMapEmbed 
+              mapLink={post.map_link} 
+              iframeEmbed={post.iframe_embed}
+              title="投稿の場所" 
+            />
           </div>
         )}
 
@@ -257,13 +264,23 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </p>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-between items-start">
           <Link
             href="/"
             className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-300 bg-white hover:bg-blue-50 hover:border-blue-300 h-10 px-4 py-2 w-full sm:w-auto"
           >
             ← 一覧に戻る
           </Link>
+          
+{/* 広告投稿は編集できないようにする */}
+          {!post.id.startsWith('ad-') && (
+            <button
+              onClick={() => setShowAdminModal(true)}
+              className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 h-8 px-3 py-1 text-gray-600"
+            >
+              🔧 管理者編集
+            </button>
+          )}
         </div>
           </div>
         </Card>
@@ -276,5 +293,13 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         <AdBanner size="small" type="sidebar" />
       </div>
     </div>
+
+    {/* 管理者認証モーダル */}
+    <AdminPasswordModal
+      isOpen={showAdminModal}
+      onClose={() => setShowAdminModal(false)}
+      postId={post?.id || ''}
+    />
+    </>
   )
 }

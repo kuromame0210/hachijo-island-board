@@ -110,11 +110,12 @@ export default function MobileMenu() {
               </nav>
 
               {/* カテゴリ別リンク */}
+              {/* カテゴリーリンクを追加/変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
               <div className="mt-8">
                 <h3 className="text-sm font-semibold text-gray-500 mb-3 px-4">カテゴリ</h3>
                 <div className="space-y-1">
                   <Link
-                    href="/?category=不動産"
+                    href="/?category=real_estate"
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                     onClick={() => setIsOpen(false)}
                   >
@@ -123,7 +124,7 @@ export default function MobileMenu() {
                   </Link>
                   {isIslander && (
                     <Link
-                      href="/?category=仕事"
+                      href="/?category=job"
                       className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                       onClick={() => setIsOpen(false)}
                     >
@@ -132,7 +133,7 @@ export default function MobileMenu() {
                     </Link>
                   )}
                   <Link
-                    href="/?category=不用品"
+                    href="/?category=secondhand"
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                     onClick={() => setIsOpen(false)}
                   >

@@ -62,29 +62,38 @@ const advertisementCards: Post[] = [
 ]
 // ============================================================
 
-const categoryColors = {
-  '不動産': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-blue-800 shadow-md',
-  '仕事': 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-2 border-emerald-800 shadow-md',
-  '不用品': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-2 border-orange-700 shadow-md',
-  '農業': 'bg-gradient-to-r from-green-600 to-green-700 text-white border-2 border-green-800 shadow-md',
-  'イベント': 'bg-gradient-to-r from-purple-600 to-purple-700 text-white border-2 border-purple-800 shadow-md',
-  'ボランティア': 'bg-gradient-to-r from-pink-600 to-pink-700 text-white border-2 border-pink-800 shadow-md'
-}
+import { 
+  getCategoriesForFilter, 
+  getCategoryIcon, 
+  getCategoryLabel,
+  type CategoryKey 
+} from '@/lib/categories'
 
-const categories = ['すべて', '不動産', '仕事', '不用品', '農業', 'イベント', 'ボランティア']
-const categoryIcons = {
-  'すべて': '',
-  '不動産': '🏠 ',
-  '仕事': '💼 ',
-  '不用品': '📦 ',
-  '農業': '🌱 ',
-  'イベント': '🎉 ',
-  'ボランティア': '🤝 '
+const categoriesForFilter = getCategoriesForFilter()
+
+// カテゴリーバッジ用の軽い色バリエーション
+// 新しいカテゴリーを追加した場合は、ここにも色を追加してください
+// 色は categories.ts の color より薄めのバリエーションを使用
+const getCategoryBadgeColor = (category: string): string => {
+  const categoryKey = category as CategoryKey
+  switch (categoryKey) {
+    case 'real_estate': return 'bg-blue-100 text-blue-700'
+    case 'job': return 'bg-green-100 text-green-700'
+    case 'secondhand': return 'bg-orange-100 text-orange-700'
+    case 'agriculture': return 'bg-green-100 text-green-700'
+    case 'event': return 'bg-purple-100 text-purple-700'
+    case 'volunteer': return 'bg-pink-100 text-pink-700'
+    case 'question': return 'bg-indigo-100 text-indigo-700'
+    case 'info': return 'bg-amber-100 text-amber-700'
+    case 'announcement': return 'bg-red-100 text-red-700'
+    case 'other': return 'bg-gray-100 text-gray-700'
+    default: return 'bg-gray-100 text-gray-700'
+  }
 }
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('すべて')
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [mounted, setMounted] = useState(false)
@@ -108,10 +117,10 @@ export default function HomePage() {
     // 島民以外は仕事カテゴリを除外
     const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
     if (!isIslander) {
-      filtered = posts.filter(post => post.category !== '仕事')
+      filtered = posts.filter(post => post.category !== 'job')
     }
 
-    if (selectedCategory === 'すべて') {
+    if (selectedCategory === 'all') {
       return filtered
     } else {
       return filtered.filter(post => post.category === selectedCategory)
@@ -148,7 +157,7 @@ export default function HomePage() {
 
   const handleCategoryClick = (category: string) => {
     // 島外から仕事カテゴリを選択しようとした場合の処理
-    if (category === '仕事' && !isIslander) {
+    if (category === 'job' && !isIslander) {
       // 何もしない（ボタンを無効化）
       return
     }
@@ -278,17 +287,19 @@ export default function HomePage() {
       <AdBanner size="large" type="banner" className="mb-4" />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        {/* カテゴリーボタンを追加/変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
         <div className="flex gap-2">
-          {categories.map((category) => {
-            const isJobsRestricted = category === '仕事' && !isIslander
+          {categoriesForFilter.map(({ key, label }) => {
+            const isJobsRestricted = key === 'job' && !isIslander
+            const displayIcon = key === 'all' ? '' : getCategoryIcon(key as CategoryKey)
 
             return (
               <button
-                key={category}
-                onClick={() => handleCategoryClick(category)}
+                key={key}
+                onClick={() => handleCategoryClick(key)}
                 disabled={isJobsRestricted}
                 className={`px-5 py-3 rounded-lg transition-all text-sm font-medium relative shadow-sm ${
-                  selectedCategory === category
+                  selectedCategory === key
                     ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
                     : isJobsRestricted
                     ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
@@ -296,7 +307,7 @@ export default function HomePage() {
                 }`}
                 title={isJobsRestricted ? '仕事情報は島民限定です' : ''}
               >
-                {categoryIcons[category as keyof typeof categoryIcons]}{category}
+                {displayIcon}{label}
                 {isJobsRestricted && (
                   <span className="ml-1 text-xs">🔒</span>
                 )}
@@ -372,12 +383,7 @@ export default function HomePage() {
                         ) : (
                           <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center border-2 border-slate-300 shadow-sm">
                             <span className="text-lg">
-                              {post.category === '不動産' ? '🏠' :
-                               post.category === '仕事' ? '💼' :
-                               post.category === '不用品' ? '📦' :
-                               post.category === '農業' ? '🌱' :
-                               post.category === 'イベント' ? '🎉' :
-                               post.category === 'ボランティア' ? '🤝' : '📝'}
+                              {getCategoryIcon(post.category as CategoryKey)}
                             </span>
                           </div>
                         )}
@@ -440,16 +446,8 @@ export default function HomePage() {
                             )}
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                              post.category === '不動産' ? 'bg-blue-100 text-blue-700' :
-                              post.category === '仕事' ? 'bg-green-100 text-green-700' :
-                              post.category === '不用品' ? 'bg-orange-100 text-orange-700' :
-                              post.category === '農業' ? 'bg-green-100 text-green-700' :
-                              post.category === 'イベント' ? 'bg-purple-100 text-purple-700' :
-                              post.category === 'ボランティア' ? 'bg-pink-100 text-pink-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {post.category}
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getCategoryBadgeColor(post.category)}`}>
+                              {getCategoryLabel(post.category as CategoryKey)}
                             </span>
                             {post.images && post.images.length > 1 && (
                               <span className="text-xs text-gray-500">
@@ -516,20 +514,10 @@ export default function HomePage() {
                     <div className="h-72 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden relative flex items-center justify-center">
                       <div className="text-center">
                         <div className="text-6xl mb-4">
-                          {post.category === '不動産' ? '🏠' :
-                           post.category === '仕事' ? '💼' :
-                           post.category === '不用品' ? '📦' :
-                           post.category === '農業' ? '🌱' :
-                           post.category === 'イベント' ? '🎉' :
-                           post.category === 'ボランティア' ? '🤝' : '📝'}
+                          {getCategoryIcon(post.category as CategoryKey)}
                         </div>
                         <div className="text-slate-500 font-medium text-lg">
-                          {post.category === '不動産' ? '不動産情報' :
-                           post.category === '仕事' ? '求人情報' :
-                           post.category === '不用品' ? '不用品情報' :
-                           post.category === '農業' ? '農業・作業募集' :
-                           post.category === 'イベント' ? 'イベント情報' :
-                           post.category === 'ボランティア' ? 'ボランティア募集' : '投稿'}
+                          {getCategoryLabel(post.category as CategoryKey)}
                         </div>
                         <div className="text-slate-400 text-sm mt-2">
                           画像なし
@@ -542,8 +530,8 @@ export default function HomePage() {
                   )}
                   <div className="p-6 bg-gradient-to-b from-white to-slate-50">
                     <div className="flex items-start justify-between mb-2">
-                      <Badge className={categoryColors[post.category as keyof typeof categoryColors]}>
-                        {post.category}
+                      <Badge className={getCategoryBadgeColor(post.category)}>
+                        {getCategoryLabel(post.category as CategoryKey)}
                       </Badge>
 {/* 報酬表示 */}
                       {post.reward_type === 'non_money' ? (

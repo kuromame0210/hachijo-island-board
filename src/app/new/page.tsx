@@ -105,7 +105,8 @@ export default function NewPost() {
         reward_details: formData.get('reward_details'),
         requirements: formData.get('requirements'),
         age_friendly: formData.get('age_friendly') === 'on',
-        map_link: formData.get('map_link')
+        map_link: formData.get('map_link'),
+        iframe_embed: formData.get('iframe_embed')
       })
 
       if (!error) {
@@ -279,6 +280,7 @@ export default function NewPost() {
             カテゴリを選んでください
           </label>
           <p className="text-base text-gray-600 mb-3">未選択の場合は「未設定」になります</p>
+          {/* カテゴリー選択肢を変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
           <Select name="category">
             <SelectTrigger className="text-lg py-6">
               <SelectValue placeholder="未設定" />
@@ -356,17 +358,42 @@ export default function NewPost() {
               </div>
 
               <div>
-                <label className="text-lg font-medium mb-2 block">
-                  場所（Googleマップリンク）
+                <label className="text-lg font-medium mb-2 block text-green-700">
+                  📍 地図埋め込み（推奨）
+                </label>
+                <Textarea
+                  name="iframe_embed"
+                  placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
+                  className="text-sm font-mono"
+                  rows={4}
+                />
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium mb-1">
+                    🗺️ 地図を投稿に直接表示するにはこちらを使用してください
+                  </p>
+                  <p className="text-sm text-green-700">
+                    Googleマップで場所を検索 → 「共有」→「地図を埋め込む」→「HTML」をコピーして貼り付け
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-lg font-medium mb-2 block text-gray-600">
+                  🔗 場所（Googleマップリンク）
                 </label>
                 <Input
                   name="map_link"
                   placeholder="https://maps.app.goo.gl/... または https://www.google.com/maps/..."
                   className="text-lg"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  ※Googleマップで場所を検索→共有→リンクをコピーして貼り付けてください
-                </p>
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 font-medium mb-1">
+                    ℹ️ 「Googleマップで開く」ボタンが表示されます
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    Googleマップで場所を検索 → 「共有」→「リンクをコピー」して貼り付け
+                  </p>
+                </div>
               </div>
 
               <div>

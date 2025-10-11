@@ -190,8 +190,8 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
     
     // 地区を判定
     const district = detectHachijoDistrict(lat, lng)
-    if (district && HACHIJO_POSTAL_CODES[district]) {
-      return `${HACHIJO_POSTAL_CODES[district]} 東京都八丈島八丈町${district}`
+    if (district && district in HACHIJO_POSTAL_CODES) {
+      return `${HACHIJO_POSTAL_CODES[district as keyof typeof HACHIJO_POSTAL_CODES]} 東京都八丈島八丈町${district}`
     }
     
     // フォールバック: OpenStreetMapで詳細取得を試行

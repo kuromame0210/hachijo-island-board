@@ -23,6 +23,8 @@ export interface Post {
   age_friendly?: boolean
   // 地図リンク
   map_link?: string
+  // iframe埋め込みコード
+  iframe_embed?: string
   // TODO: 広告フラグ（未実装）
   // is_ad?: boolean  // データベースに is_ad カラムを追加後に有効化
 }
@@ -44,7 +46,10 @@ export interface LocationData {
   timestamp: number
 }
 
-export type Category = '不動産' | '仕事' | '不用品' | '農業' | 'イベント' | 'ボランティア' | 'すべて'
+// カテゴリーの型定義は categories.ts から import
+import { CategoryKey } from '@/lib/categories'
+
+export type Category = CategoryKey | 'all'  // 'all' はフィルター用
 
 export interface Theme {
   name: string
