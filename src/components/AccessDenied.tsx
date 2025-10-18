@@ -61,14 +61,6 @@ export default function AccessDenied({ type, title, message }: AccessDeniedProps
             </div>
           )}
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-2">八丈島にお越しください！</h3>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>🏝️ 美しい自然と温泉が待っています</p>
-              <p>✈️ 羽田空港から飛行機で約55分</p>
-              <p>🤝 温かい島民コミュニティへようこそ</p>
-            </div>
-          </div>
         </div>
       </Card>
     </div>

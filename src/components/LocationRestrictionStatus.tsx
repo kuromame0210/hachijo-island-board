@@ -222,9 +222,6 @@ export default function LocationRestrictionStatus() {
             <p className="text-sm text-gray-700 mb-2">
               全ての機能をご利用いただくには、八丈島内からアクセスしてください。
             </p>
-            <div className="text-sm text-gray-600">
-              🏝️ 美しい自然と温泉 | ✈️ 羽田空港から約55分 | 🤝 温かい島民コミュニティ
-            </div>
           </div>
         )}
       </div>

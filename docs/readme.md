@@ -78,7 +78,7 @@ export default function RootLayout({
         <header className="bg-white border-b">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <a href="/" className="text-xl font-semibold text-gray-900">
-              八丈島掲示板
+              八丈掲示板
             </a>
             <a
               href="/new"

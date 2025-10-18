@@ -14,7 +14,14 @@
       "Bash(gh repo create:*)",
       "Bash(git commit:*)",
       "Bash(npm test)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(psql:*)",
+      "WebFetch(domain:www.8jo-saigai.com)"
     ],
     "deny": [],
     "ask": []

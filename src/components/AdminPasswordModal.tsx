@@ -25,7 +25,7 @@ export default function AdminPasswordModal({ isOpen, onClose, postId }: AdminPas
         onClose()
         return true
       }
-    } catch (error) {
+    } catch {
       console.log('No existing session')
     }
     return false
@@ -36,7 +36,7 @@ export default function AdminPasswordModal({ isOpen, onClose, postId }: AdminPas
     if (isOpen) {
       checkExistingSession()
     }
-  }, [isOpen, postId, router])
+  }, [isOpen, postId, router, checkExistingSession])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +59,7 @@ export default function AdminPasswordModal({ isOpen, onClose, postId }: AdminPas
       } else {
         setError('パスワードが正しくありません')
       }
-    } catch (error) {
+    } catch {
       setError('認証に失敗しました')
     } finally {
       setIsLoading(false)

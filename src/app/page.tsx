@@ -4,72 +4,18 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import AdBanner from '@/components/ads/AdBanner'
-import { LocationStatus } from '@/components/LocationDetector'
 import { useLocation } from '@/hooks/useLocation'
 import { SimpleAccessDenied } from '@/components/AccessDenied'
 import { Post } from '@/types'
+import InfoPortalLinks from '@/components/InfoPortalLinks'
 
-// ============================================================
-// デモ用広告カード（ハードコーディング）
-// 本番環境では削除するか、データベースから取得する
-//
-// TODO: データベースに移行する場合の実装方針
-// 1. hachijo_post_boardテーブルに`is_ad: boolean`カラムを追加
-// 2. 広告レコードには`is_ad = true`を設定
-// 3. 一覧取得時に`WHERE is_ad = false`で広告を除外するか、
-//    広告専用のクエリで取得して上部に表示
-// 4. カテゴリ「広告」を維持するか、is_adフラグで判別するか検討
-// ============================================================
-const advertisementCards: Post[] = [
-  {
-    id: 'ad-freesia-festival',
-    title: '🌸 八丈島フリージアまつり 2025',
-    description: `八丈島の春を彩る「フリージアまつり」が今年も開催されます！
-
-色とりどりのフリージアが咲き誇る八形山の特設会場で、約35万本のフリージアをお楽しみいただけます。無料シャトルバスも運行しており、島内各所からアクセス可能です。
-
-期間中は、フリージアの摘み取り体験や地元特産品の販売、ステージイベントなども予定しています。春の八丈島で、美しい花々と共に素敵な時間をお過ごしください。`,
-    category: '広告',
-    created_at: new Date('2025-03-01').toISOString(),
-    work_date: '2025年3月22日(土)～4月6日(日)',
-    reward_type: 'free',
-    reward_details: '入場無料',
-    requirements: '特になし。どなたでもご参加いただけます。',
-    conditions: '天候により内容が変更になる場合があります。',
-    contact: '(一社)八丈島観光協会 TEL: 04996-2-1377',
-    age_friendly: true,
-    tags: ['広告', '#フリージア祭り', '#八丈島', '#春のイベント', '#観光'],
-    images: []
-  },
-  {
-    id: 'ad-tax-reminder',
-    title: '📋 令和6年度 住民税納付のご案内',
-    description: `令和6年度住民税の納付期限が近づいています。
-
-納付書をお持ちの方は、各金融機関またはコンビニエンスストアでお支払いください。納付書を紛失された方や、お手元に届いていない方は、八丈町役場税務課までご連絡ください。
-
-口座振替をご利用の方は、残高不足にご注意ください。納付が困難な場合は、分納のご相談も承っておりますので、お気軽にお問い合わせください。`,
-    category: '広告',
-    created_at: new Date('2025-09-01').toISOString(),
-    work_date: '納期限：第1期 6月末、第2期 8月末、第3期 10月末、第4期 1月末',
-    reward_type: 'free',
-    contact: '八丈町役場 税務課 TEL: 04996-2-1121',
-    age_friendly: false,
-    tags: ['広告', '#住民税', '#納税', '#八丈町', '#お知らせ'],
-    images: []
-  }
-]
-// ============================================================
+// 広告はデータベースから投稿として取得するように変更
 
 import { 
-  getCategoriesForFilter, 
   getCategoryIcon, 
   getCategoryLabel,
   type CategoryKey 
 } from '@/lib/categories'
-
-const categoriesForFilter = getCategoriesForFilter()
 
 // カテゴリーバッジ用の軽い色バリエーション
 // 新しいカテゴリーを追加した場合は、ここにも色を追加してください
@@ -87,13 +33,15 @@ const getCategoryBadgeColor = (category: string): string => {
     case 'info': return 'bg-amber-100 text-amber-700'
     case 'announcement': return 'bg-red-100 text-red-700'
     case 'other': return 'bg-gray-100 text-gray-700'
+    case 'advertisement': return 'bg-yellow-100 text-orange-700'
     default: return 'bg-gray-100 text-gray-700'
   }
 }
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  // カテゴリフィルター一時無効化のため'all'に固定
+  const selectedCategory = 'all'
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [mounted, setMounted] = useState(false)
@@ -110,22 +58,15 @@ export default function HomePage() {
     }
   }, [])
 
-  // パフォーマンス最適化: useMemoでフィルタリング処理をメモ化
+  // カテゴリフィルター無効化時の投稿リスト（島民以外は仕事カテゴリを除外）
   const filteredPosts = useMemo(() => {
-    let filtered = posts
-
     // 島民以外は仕事カテゴリを除外
     const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
     if (!isIslander) {
-      filtered = posts.filter(post => post.category !== 'job')
+      return posts.filter(post => post.category !== 'job')
     }
-
-    if (selectedCategory === 'all') {
-      return filtered
-    } else {
-      return filtered.filter(post => post.category === selectedCategory)
-    }
-  }, [posts, selectedCategory, hasAskedPermission, locationResult])
+    return posts
+  }, [posts, hasAskedPermission, locationResult])
 
   // 島民判定のメモ化
   const isIslander = useMemo(() => {
@@ -137,93 +78,38 @@ export default function HomePage() {
       const { data, error } = await supabase
         .from('hachijo_post_board')
         .select('*')
+        .eq('status', 'active')  // activeステータスのみ取得
         .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Supabase error:', error)
-        setPosts(advertisementCards) // エラー時は広告カードのみ表示
+        setPosts([]) // エラー時は空の配列
       } else if (data) {
-        // 広告カードを通常の投稿に混合
-        const allPosts = [...advertisementCards, ...data]
-        setPosts(allPosts)
+        setPosts(data)
       }
     } catch (error) {
       console.error('Fetch error:', error)
-      setPosts(advertisementCards) // エラー時は広告カードのみ表示
+      setPosts([]) // エラー時は空の配列
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCategoryClick = (category: string) => {
-    // 島外から仕事カテゴリを選択しようとした場合の処理
-    if (category === 'job' && !isIslander) {
-      // 何もしない（ボタンを無効化）
-      return
-    }
-    setSelectedCategory(category)
-  }
+  // カテゴリフィルター無効化により削除
+  // const handleCategoryClick = (category: string) => {
+  //   // 島外から仕事カテゴリを選択しようとした場合の処理
+  //   if (category === 'job' && !isIslander) {
+  //     // 何もしない（ボタンを無効化）
+  //     return
+  //   }
+  //   setSelectedCategory(category)
+  // }
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
   }
 
-  // 位置情報未確認時の大きな確認画面
-  if (!hasAskedPermission) {
-    return (
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
-        <div className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl shadow-2xl border-4 border-blue-200">
-          <div className="text-center space-y-8">
-            <div className="text-8xl mb-6">🏝️</div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-4">
-              八丈島島民専用掲示板
-            </h1>
-            <div className="bg-white/80 rounded-2xl p-6 border-2 border-blue-300">
-              <h2 className="text-2xl font-semibold text-blue-800 mb-4">
-                📍 位置情報の確認が必要です
-              </h2>
-              <p className="text-lg text-slate-700 mb-6 leading-relaxed">
-                この掲示板は八丈島島民専用サービスです。<br/>
-                ご利用には位置情報による島内確認が必要となります。
-              </p>
-              <button
-                onClick={() => {
-                  console.log('位置確認ボタンクリック')
-                  requestLocation()
-                }}
-                className="px-8 py-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-2xl transition-all shadow-lg transform hover:scale-105"
-              >
-                位置情報を確認する
-              </button>
-            </div>
-            <div className="text-sm text-slate-600 space-y-2">
-              <p>⚠️ 位置情報は島内確認のためのみ使用されます</p>
-              <p>🔒 個人情報は収集・保存されません</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // 位置情報確認中の画面
-  if (locationResult.status === 'loading') {
-    return (
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
-        <div className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl shadow-2xl border-4 border-blue-200">
-          <div className="text-center space-y-8">
-            <div className="text-8xl mb-6 animate-pulse">🔄</div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-4">
-              位置情報を確認中...
-            </h1>
-            <p className="text-lg text-slate-700">
-              GPSまたはIPアドレスによる位置情報を取得しています
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // 位置情報は右下の小さな表示で確認してもらう
 
   // 八丈島外からのアクセス制限画面
   if (hasAskedPermission && (!locationResult.isInHachijo)) {
@@ -280,14 +166,10 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* 位置情報ステータス */}
-      <LocationStatus />
-
-      {/* トップバナー広告 */}
-      <AdBanner size="large" type="banner" className="mb-4" />
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        {/* カテゴリーボタンを追加/変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
+        {/* カテゴリーフィルター一時非表示（レコード数が少ないため） */}
+        {/* 
         <div className="overflow-x-auto">
           <div className="flex gap-2 min-w-max pb-2">
             {categoriesForFilter.map(({ key, label }) => {
@@ -317,6 +199,7 @@ export default function HomePage() {
           })}
           </div>
         </div>
+        */}
 
         <div className="flex gap-2 whitespace-nowrap">
           <button
@@ -348,25 +231,17 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 仕事カテゴリが選択されているが島民でない場合のアクセス拒否 */}
-      {selectedCategory === '仕事' && !isIslander ? (
-        <SimpleAccessDenied type="jobs" />
-      ) : viewMode === 'list' ? (
+      {/* 情報ポータルリンク */}
+      <div className="mb-6">
+        <InfoPortalLinks className="mb-4" />
+      </div>
+
+      {/* カテゴリフィルター無効化により仕事カテゴリ選択時のアクセス制限も削除 */}
+      {viewMode === 'list' ? (
         // リスト表示
         <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden">
           {filteredPosts.map((post, index) => (
             <React.Fragment key={post.id}>
-              {/* 広告挿入 */}
-              {index === 5 && (
-                <div className="border-b border-gray-100 bg-blue-50/30">
-                  <AdBanner size="medium" type="banner" className="my-3 mx-3" />
-                </div>
-              )}
-              {index === 12 && (
-                <div className="border-b border-gray-100 bg-blue-50/30">
-                  <AdBanner size="medium" type="banner" className="my-3 mx-3" />
-                </div>
-              )}
 
               <a href={`/post/${post.id}`} className="block">
                 <div className={`hover:bg-slate-50 transition-colors duration-200 cursor-pointer border-b border-slate-200 ${index === filteredPosts.length - 1 ? 'border-b-0' : ''}`}>
@@ -475,27 +350,9 @@ export default function HomePage() {
       ) : (
         // カード表示（既存）
         <div>
-          {/* 最初の広告 */}
-          {filteredPosts.length > 3 && (
-            <div className="mb-6">
-              <AdBanner size="medium" type="banner" />
-            </div>
-          )}
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map((post, index) => (
               <React.Fragment key={post.id}>
-                {/* 中間広告 */}
-                {index === 6 && (
-                  <div className="md:col-span-2 lg:col-span-3 my-6">
-                    <AdBanner size="medium" type="banner" />
-                  </div>
-                )}
-                {index === 12 && (
-                  <div className="md:col-span-2 lg:col-span-3 my-6">
-                    <AdBanner size="medium" type="banner" />
-                  </div>
-                )}
 
                 <a href={`/post/${post.id}`}>
                 <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full border-2 border-slate-200 hover:border-slate-300 bg-white rounded-xl overflow-hidden">
@@ -590,9 +447,9 @@ export default function HomePage() {
         </div>
       )}
 
-      {filteredPosts.length === 0 && selectedCategory !== '仕事' && (
+      {filteredPosts.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          {selectedCategory === 'すべて' ? '投稿がありません' : `${selectedCategory}の投稿がありません`}
+          投稿がありません
         </div>
       )}
     </div>

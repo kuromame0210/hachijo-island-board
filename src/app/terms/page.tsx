@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "利用規約 - 八丈島掲示板",
-  description: "八丈島掲示板の利用規約",
+  title: "利用規約 - 八丈掲示板",
+  description: "八丈掲示板の利用規約",
 };
 
 export default function TermsPage() {

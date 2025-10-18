@@ -5,10 +5,9 @@ import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import AdBanner from '@/components/ads/AdBanner'
 import GoogleMapEmbed from '@/components/GoogleMapEmbed'
-import AdminPasswordModal from '@/components/AdminPasswordModal'
 import { Post } from '@/types'
+import { useLocationAccess } from '@/hooks/useLocationAccess'
 
 // ============================================================
 // デモ用広告データ（page.tsxと同期）
@@ -20,40 +19,43 @@ import { Post } from '@/types'
 // ============================================================
 const advertisementCards: Post[] = [
   {
-    id: 'ad-freesia-festival',
-    title: '🌸 八丈島フリージアまつり 2025',
-    description: `八丈島の春を彩る「フリージアまつり」が今年も開催されます！
+    id: 'ad-hachijo-infra',
+    title: '🏗️ 八丈島インフラ情報',
+    description: `八丈島の道路、上下水道、交通機関などのインフラ情報をお知らせしています。
 
-色とりどりのフリージアが咲き誇る八形山の特設会場で、約35万本のフリージアをお楽しみいただけます。無料シャトルバスも運行しており、島内各所からアクセス可能です。
+島内の交通規制、工事情報、ライフライン関連のお知らせなど、島民の皆様の生活に役立つ最新のインフラ情報を随時更新しています。
 
-期間中は、フリージアの摘み取り体験や地元特産品の販売、ステージイベントなども予定しています。春の八丈島で、美しい花々と共に素敵な時間をお過ごしください。`,
+台風や災害時の緊急情報も掲載していますので、ぜひブックマークしてご活用ください。`,
     category: '広告',
-    created_at: new Date('2025-03-01').toISOString(),
-    work_date: '2025年3月22日(土)～4月6日(日)',
+    created_at: new Date('2025-10-01').toISOString(),
+    work_date: '随時更新',
     reward_type: 'free',
-    reward_details: '入場無料',
-    requirements: '特になし。どなたでもご参加いただけます。',
-    conditions: '天候により内容が変更になる場合があります。',
-    contact: '(一社)八丈島観光協会 TEL: 04996-2-1377',
+    reward_details: '無料',
+    requirements: '特になし',
+    conditions: '情報は随時更新されます',
+    contact: 'https://infra8jo.shuuutaf.workers.dev/',
     age_friendly: true,
-    tags: ['広告', '#フリージア祭り', '#八丈島', '#春のイベント', '#観光'],
+    tags: ['広告', '#インフラ', '#八丈島', '#道路情報', '#生活情報'],
     images: []
   },
   {
-    id: 'ad-tax-reminder',
-    title: '📋 令和6年度 住民税納付のご案内',
-    description: `令和6年度住民税の納付期限が近づいています。
+    id: 'ad-hachijo-saigai',
+    title: '🚨 八丈島災害情報',
+    description: `八丈島の災害・防災情報を総合的にお知らせするサイトです。
 
-納付書をお持ちの方は、各金融機関またはコンビニエンスストアでお支払いください。納付書を紛失された方や、お手元に届いていない方は、八丈町役場税務課までご連絡ください。
+台風接近時の警報・注意報、避難所情報、ライフライン復旧状況など、島民の皆様の安全に関わる重要な情報を迅速にお伝えしています。
 
-口座振替をご利用の方は、残高不足にご注意ください。納付が困難な場合は、分納のご相談も承っておりますので、お気軽にお問い合わせください。`,
+緊急時の連絡先、防災マップ、避難場所一覧なども掲載。災害への備えとしてぜひご確認ください。`,
     category: '広告',
-    created_at: new Date('2025-09-01').toISOString(),
-    work_date: '納期限：第1期 6月末、第2期 8月末、第3期 10月末、第4期 1月末',
+    created_at: new Date('2025-10-01').toISOString(),
+    work_date: '24時間365日',
     reward_type: 'free',
-    contact: '八丈町役場 税務課 TEL: 04996-2-1121',
-    age_friendly: false,
-    tags: ['広告', '#住民税', '#納税', '#八丈町', '#お知らせ'],
+    reward_details: '無料',
+    requirements: '特になし',
+    conditions: '緊急時は随時更新',
+    contact: 'https://www.8jo-saigai.com/',
+    age_friendly: true,
+    tags: ['広告', '#災害情報', '#防災', '#八丈島', '#緊急情報'],
     images: []
   }
 ]
@@ -63,7 +65,8 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [showAdminModal, setShowAdminModal] = useState(false)
+  const [showEditWarning, setShowEditWarning] = useState(false)
+  const { canPost } = useLocationAccess()
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -77,11 +80,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         return
       }
 
-      // 通常の投稿はデータベースから取得
+      // 通常の投稿はデータベースから取得（activeステータスのみ）
       const { data } = await supabase
         .from('hachijo_post_board')
         .select('*')
         .eq('id', id)
+        .eq('status', 'active')  // activeステータスのみ取得
         .single()
 
       setPost(data)
@@ -165,29 +169,6 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
         {/* 新フィールドの表示 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* 報酬・対価情報 */}
-          {(post.reward_type || post.reward_details) && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
-              <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
-                💰 報酬・対価
-              </h4>
-              {post.reward_type && (
-                <p className="text-base text-gray-700 mb-1">
-                  <span className="font-medium">種別:</span> {
-                    post.reward_type === 'money' ? '💰 金銭報酬' :
-                    post.reward_type === 'non_money' ? '🎁 非金銭報酬' :
-                    post.reward_type === 'both' ? '💎 金銭+現物' :
-                    '🤝 無償・体験'
-                  }
-                </p>
-              )}
-              {post.reward_details && (
-                <p className="text-base text-gray-700">
-                  <span className="font-medium">詳細:</span> {post.reward_details}
-                </p>
-              )}
-            </div>
-          )}
 
           {/* 作業日時 */}
           {post.work_date && (
@@ -273,12 +254,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </Link>
           
 {/* 広告投稿は編集できないようにする */}
-          {!post.id.startsWith('ad-') && (
+          {!post.id.startsWith('ad-') && canPost && (
             <button
-              onClick={() => setShowAdminModal(true)}
+              onClick={() => setShowEditWarning(true)}
               className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 h-8 px-3 py-1 text-gray-600"
             >
-              🔧 管理者編集
+              🔧 編集
             </button>
           )}
         </div>
@@ -286,20 +267,41 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         </Card>
       </div>
 
-      {/* サイドバー */}
+      {/* サイドバー - 広告は一旦削除 */}
       <div className="lg:col-span-1 space-y-6">
-        <AdBanner size="small" type="sidebar" />
-        <AdBanner size="small" type="sidebar" />
-        <AdBanner size="small" type="sidebar" />
+        {/* 広告エリア - 後で実装 */}
       </div>
     </div>
 
-    {/* 管理者認証モーダル */}
-    <AdminPasswordModal
-      isOpen={showAdminModal}
-      onClose={() => setShowAdminModal(false)}
-      postId={post?.id || ''}
-    />
+    {/* 編集確認ダイアログ */}
+    {showEditWarning && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+          <h3 className="text-lg font-semibold mb-4">投稿を編集しますか？</h3>
+          <p className="text-gray-600 mb-6">
+            データベースが変更され、元に戻せません。<br/>
+            編集を続行しますか？
+          </p>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setShowEditWarning(false)}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={() => {
+                setShowEditWarning(false)
+                window.location.href = `/post/${post?.id}/edit`
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              編集する
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   )
 }

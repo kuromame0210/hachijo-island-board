@@ -35,43 +35,43 @@ export interface CategoryConfig {
 export const CATEGORIES = {
   // 既存カテゴリー（DB移行対象）
   real_estate: {
-    label: '🏠 不動産',
-    icon: '🏠',
+    label: '不動産',
+    icon: '',
     color: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-blue-800 shadow-md',
     order: 1,
     description: '賃貸・売買・不動産情報'
   },
   job: {
-    label: '💼 仕事',
-    icon: '💼', 
+    label: '仕事',
+    icon: '', 
     color: 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-2 border-emerald-800 shadow-md',
     order: 2,
     description: '求人・仕事情報'
   },
   secondhand: {
-    label: '📦 不用品',
-    icon: '📦',
+    label: '不用品',
+    icon: '',
     color: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-2 border-orange-700 shadow-md', 
     order: 3,
     description: '中古品・不用品'
   },
   agriculture: {
-    label: '🌱 農業',
-    icon: '🌱',
+    label: '農業',
+    icon: '',
     color: 'bg-gradient-to-r from-green-600 to-green-700 text-white border-2 border-green-800 shadow-md',
     order: 4,
     description: '農業・作業募集'
   },
   event: {
-    label: '🎉 イベント', 
-    icon: '🎉',
+    label: 'イベント', 
+    icon: '',
     color: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white border-2 border-purple-800 shadow-md',
     order: 5,
     description: 'イベント情報'
   },
   volunteer: {
-    label: '🤝 ボランティア',
-    icon: '🤝',
+    label: 'ボランティア',
+    icon: '',
     color: 'bg-gradient-to-r from-pink-600 to-pink-700 text-white border-2 border-pink-800 shadow-md',
     order: 6,
     description: 'ボランティア募集'
@@ -79,32 +79,46 @@ export const CATEGORIES = {
   
   // 新規カテゴリー
   question: {
-    label: '💭 質問',
-    icon: '💭',
+    label: '質問',
+    icon: '',
     color: 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white border-2 border-indigo-800 shadow-md',
     order: 7,
     description: '質問・相談'
   },
   info: {
-    label: '💡 情報',
-    icon: '💡', 
+    label: '情報',
+    icon: '', 
     color: 'bg-gradient-to-r from-amber-600 to-amber-700 text-white border-2 border-amber-800 shadow-md',
     order: 8,
     description: '役立つ情報'
   },
   announcement: {
-    label: '📢 お知らせ',
-    icon: '📢',
+    label: 'お知らせ',
+    icon: '',
     color: 'bg-gradient-to-r from-red-600 to-red-700 text-white border-2 border-red-800 shadow-md',
     order: 9, 
     description: '重要なお知らせ'
   },
   other: {
-    label: '📝 その他',
-    icon: '📝',
+    label: 'その他',
+    icon: '',
     color: 'bg-gradient-to-r from-gray-600 to-gray-700 text-white border-2 border-gray-800 shadow-md',
     order: 10,
     description: 'その他'
+  },
+  advertisement: {
+    label: '広告',
+    icon: '',
+    color: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-2 border-orange-600 shadow-md',
+    order: 11,
+    description: '広告・宣伝'
+  },
+  disaster_support: {
+    label: '🆘 災害支援',
+    icon: '🆘',
+    color: 'bg-gradient-to-r from-red-600 to-red-700 text-white border-2 border-red-800 shadow-md',
+    order: 12,
+    description: '台風復旧支援要請'
   }
 } as const
 
@@ -123,7 +137,7 @@ export const getSortedCategories = (): CategoryKey[] =>
 
 export const getCategoryLabel = (key: CategoryKey): string => CATEGORIES[key]?.label || '不明'
 
-export const getCategoryIcon = (key: CategoryKey): string => CATEGORIES[key]?.icon || '❓'
+export const getCategoryIcon = (key: CategoryKey): string => CATEGORIES[key]?.icon || ''
 
 export const getCategoryColor = (key: CategoryKey): string => CATEGORIES[key]?.color || 'bg-gray-500 text-white'
 

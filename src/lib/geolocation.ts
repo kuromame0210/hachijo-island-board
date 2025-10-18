@@ -19,19 +19,19 @@ export const HACHIJO_LANDMARKS = {
     lat: 33.1151, 
     lng: 139.7858, 
     name: "八丈島空港",
-    icon: "✈️"
+    icon: ""
   },
   sottodo_port: { 
     lat: 33.1098, 
     lng: 139.7695, 
     name: "底土港",
-    icon: "⚓"
+    icon: ""
   },
   city_hall: { 
     lat: 33.1073, 
     lng: 139.7932, 
     name: "八丈町役場",
-    icon: "🏛️"
+    icon: ""
   }
 }
 

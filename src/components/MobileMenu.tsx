@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useLocation } from '@/hooks/useLocation'
+import { useLocationAccess } from '@/hooks/useLocationAccess'
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
-  const { locationResult, hasAskedPermission } = useLocation()
-  const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
+  const { hasAskedPermission } = useLocation()
+  const { canPost, isCurrentlyInIsland, hasRecentIslandAccess } = useLocationAccess()
 
   return (
     <>
@@ -48,12 +49,12 @@ export default function MobileMenu() {
             <div className="p-6">
               {/* ヘッダー */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">🏝️ メニュー</h2>
+                <h2 className="text-lg font-bold text-gray-900">メニュー</h2>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 text-gray-500 hover:text-gray-700"
                 >
-                  ✕
+                  ×
                 </button>
               </div>
 
@@ -61,19 +62,20 @@ export default function MobileMenu() {
               <div className={`p-3 rounded-lg mb-6 ${
                 !hasAskedPermission
                   ? 'bg-amber-50 border border-amber-200'
-                  : isIslander
+                  : canPost
                     ? 'bg-green-50 border border-green-200'
                     : 'bg-orange-50 border border-orange-200'
               }`}>
                 <div className="text-sm font-medium">
-                  {!hasAskedPermission && '📍 位置未確認'}
-                  {hasAskedPermission && isIslander && '🏝️ 八丈島内'}
-                  {hasAskedPermission && !isIslander && '🌍 八丈島外'}
+                  {!hasAskedPermission && '位置未確認'}
+                  {hasAskedPermission && isCurrentlyInIsland && '八丈島内'}
+                  {hasAskedPermission && !isCurrentlyInIsland && hasRecentIslandAccess && '過去アクセス記録あり'}
+                  {hasAskedPermission && !canPost && '島外'}
                 </div>
                 <div className="text-xs mt-1 opacity-75">
                   {!hasAskedPermission && '位置確認をお願いします'}
-                  {hasAskedPermission && isIslander && '全機能利用可能'}
-                  {hasAskedPermission && !isIslander && '一部機能制限'}
+                  {hasAskedPermission && canPost && '投稿機能利用可能'}
+                  {hasAskedPermission && !canPost && '投稿機能制限'}
                 </div>
               </div>
 
@@ -84,7 +86,6 @@ export default function MobileMenu() {
                   className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  <span className="text-xl">🏠</span>
                   <span className="font-medium">ホーム</span>
                 </Link>
                 <Link
@@ -92,19 +93,30 @@ export default function MobileMenu() {
                   className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  <span className="text-xl">📍</span>
                   <span className="font-medium">位置情報</span>
                 </Link>
 
-                {/* 投稿リンク（島民限定） */}
-                {isIslander && (
+                {/* 通常投稿リンクを一時非表示 */}
+                {/* 
+                {canPost && (
                   <Link
                     href="/new"
                     className="flex items-center gap-3 px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span className="text-xl">✍️</span>
                     <span className="font-medium">投稿する</span>
+                  </Link>
+                )}
+                */}
+                
+                {/* リクエスト機能リンク（投稿権限がある場合のみ） */}
+                {canPost && (
+                  <Link
+                    href="/disaster/new"
+                    className="flex items-center gap-3 px-4 py-3 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span className="font-medium">🆘 リクエスト機能</span>
                   </Link>
                 )}
               </nav>
@@ -119,25 +131,20 @@ export default function MobileMenu() {
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span>🏠</span>
                     <span>不動産</span>
                   </Link>
-                  {isIslander && (
-                    <Link
-                      href="/?category=job"
-                      className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <span>💼</span>
-                      <span>仕事</span>
-                    </Link>
-                  )}
+                  <Link
+                    href="/?category=job"
+                    className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span>仕事</span>
+                  </Link>
                   <Link
                     href="/?category=secondhand"
                     className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span>📦</span>
                     <span>不用品</span>
                   </Link>
                 </div>

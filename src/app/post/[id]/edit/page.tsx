@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Post } from '@/types'
+import { useLocation } from '@/hooks/useLocation'
+import { useLocationAccess } from '@/hooks/useLocationAccess'
 
 export default function EditPost({ params }: { params: Promise<{ id: string }> }) {
   const [post, setPost] = useState<Post | null>(null)
@@ -14,6 +16,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { locationResult, hasAskedPermission } = useLocation()
+  const { canPost } = useLocationAccess()
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -26,10 +30,10 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         return
       }
       
-      // セッション確認（管理者認証済みかチェック）
-      const authCheck = await fetch('/api/admin/verify')
-      if (!authCheck.ok) {
-        router.push(`/post/${id}`)
+      // 位置制限チェック（島民のみ編集可能）
+      if (!hasAskedPermission || locationResult.status !== 'success' || !canPost) {
+        setError('編集機能は八丈島内、または過去2週間以内に島内からアクセスした記録がある方のみご利用いただけます。')
+        setLoading(false)
         return
       }
 
@@ -38,6 +42,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
           .from('hachijo_post_board')
           .select('*')
           .eq('id', id)
+          .eq('status', 'active')  // activeステータスのみ取得
           .single()
 
         if (error) throw error
@@ -53,7 +58,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     }
 
     fetchPost()
-  }, [params, router])
+  }, [params, router, hasAskedPermission, locationResult.status, canPost])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -67,34 +72,31 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     console.log('📝 Form data:', Object.fromEntries(formData.entries()))
 
     try {
-      const requestData = {
+      const updateData = {
         title: formData.get('title'),
         description: formData.get('content'),
         category: formData.get('category'),
         contact: formData.get('contact'),
         tags: formData.get('tags')?.toString().split(',').map(tag => tag.trim()).filter(Boolean) || [],
         reward_type: formData.get('reward_type') || null,
-        reward_details: formData.get('reward_details'),
-        requirements: formData.get('requirements'),
+        reward_details: formData.get('reward_details') || null,
+        requirements: formData.get('requirements') || null,
         age_friendly: formData.get('age_friendly') === 'on',
-        map_link: formData.get('map_link'),
-        iframe_embed: formData.get('iframe_embed')
+        map_link: formData.get('map_link') || null,
+        iframe_embed: formData.get('iframe_embed') || null,
+        updated_at: new Date().toISOString()
       }
       
-      console.log('📤 Sending request:', JSON.stringify(requestData, null, 2))
+      console.log('📤 Updating post directly via Supabase:', JSON.stringify(updateData, null, 2))
       
-      const response = await fetch(`/api/posts/${post.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      })
-      
-      console.log('📥 Response status:', response.status)
+      const { error } = await supabase
+        .from('hachijo_post_board')
+        .update(updateData)
+        .eq('id', post.id)
 
-      if (!response.ok) {
-        throw new Error('更新に失敗しました')
+      if (error) {
+        console.error('Supabase update error:', error)
+        throw new Error('投稿の更新に失敗しました')
       }
 
       // 更新成功 - 詳細ページに戻る
@@ -275,34 +277,6 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
           {/* 求人・仕事関連フィールド */}
           {post.category === 'job' && (
             <>
-              <div>
-                <label className="text-lg font-medium mb-2 block">
-                  報酬の種類
-                </label>
-                <select
-                  name="reward_type"
-                  defaultValue={post.reward_type || ''}
-                  className="w-full px-3 py-2 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">選択してください</option>
-                  <option value="money">金銭報酬</option>
-                  <option value="non_money">非金銭報酬（物品・サービス）</option>
-                  <option value="both">金銭+現物</option>
-                  <option value="free">無償・体験</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-lg font-medium mb-2 block">
-                  報酬の詳細
-                </label>
-                <Input
-                  name="reward_details"
-                  defaultValue={post.reward_details || ''}
-                  placeholder="例：時給1000円、交通費別途支給"
-                  className="text-lg"
-                />
-              </div>
 
               <div>
                 <label className="text-lg font-medium mb-2 block">

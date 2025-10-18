@@ -1,4 +1,4 @@
--- 八丈島掲示板サンプルデータ
+-- 八丈掲示板サンプルデータ
 
 -- 不動産カテゴリ
 INSERT INTO hachijo_post_board (title, description, category, price, contact, created_at) VALUES
