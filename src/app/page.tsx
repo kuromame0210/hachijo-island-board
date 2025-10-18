@@ -273,27 +273,34 @@ export default function HomePage() {
                           <h3 className="font-medium text-gray-900 text-sm leading-tight truncate flex-1">
                             {post.title}
                           </h3>
-{/* 報酬表示 */}
-                          {post.reward_type === 'non_money' ? (
-                            <span className="font-bold text-base text-green-600 flex-shrink-0">
-                              {post.reward_details || '非金銭報酬'}
-                            </span>
-                          ) : post.reward_type === 'both' ? (
-                            <span className="font-bold text-base text-blue-600 flex-shrink-0">
-                              {post.reward_details || '金銭+現物'}
-                            </span>
-                          ) : post.reward_type === 'free' ? (
-                            <span className="font-bold text-base text-purple-600 flex-shrink-0">
-                              無償・体験
-                            </span>
-                          ) : post.price !== null && post.price !== undefined ? (
-                            <span className="font-bold text-lg text-red-600 flex-shrink-0">
-                              ¥{post.price.toLocaleString()}
-                            </span>
-                          ) : (
-                            <span className="font-bold text-base text-green-600 flex-shrink-0">
-                              無料
-                            </span>
+{/* 報酬表示（災害支援投稿の場合は非表示） */}
+                          {!((post.tags && post.tags.includes('プライベート連絡先')) || 
+                             (post.category === 'other' && post.title && 
+                              (post.title.includes('支援') || post.title.includes('災害') || post.title.includes('リクエスト') || 
+                               post.title.includes('ボランティア') || post.title.includes('台風') || post.title.includes('みつね') || 
+                               post.title.includes('テスト'))) || 
+                             post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d') && (
+                            post.reward_type === 'non_money' ? (
+                              <span className="font-bold text-base text-green-600 flex-shrink-0">
+                                {post.reward_details || '非金銭報酬'}
+                              </span>
+                            ) : post.reward_type === 'both' ? (
+                              <span className="font-bold text-base text-blue-600 flex-shrink-0">
+                                {post.reward_details || '金銭+現物'}
+                              </span>
+                            ) : post.reward_type === 'free' ? (
+                              <span className="font-bold text-base text-purple-600 flex-shrink-0">
+                                無償・体験
+                              </span>
+                            ) : post.price !== null && post.price !== undefined ? (
+                              <span className="font-bold text-lg text-red-600 flex-shrink-0">
+                                ¥{post.price.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="font-bold text-base text-green-600 flex-shrink-0">
+                                無料
+                              </span>
+                            )
                           )}
                         </div>
 
@@ -392,24 +399,31 @@ export default function HomePage() {
                       <Badge className={getCategoryBadgeColor(post.category)}>
                         {getCategoryLabel(post.category as CategoryKey)}
                       </Badge>
-{/* 報酬表示 */}
-                      {post.reward_type === 'non_money' ? (
-                        <span className="font-bold text-sm text-green-600 max-w-24 truncate">
-                          {post.reward_details || '非金銭報酬'}
-                        </span>
-                      ) : post.reward_type === 'both' ? (
-                        <span className="font-bold text-sm text-blue-600 max-w-32 truncate">
-                          {post.reward_details || '金銭+現物'}
-                        </span>
-                      ) : post.reward_type === 'free' ? (
-                        <span className="font-bold text-sm text-purple-600">
-                          無償・体験
-                        </span>
-                      ) : post.price !== null && post.price !== undefined ? (
-                        <span className="font-bold text-xl text-emerald-600">
-                          ¥{post.price.toLocaleString()}
-                        </span>
-                      ) : null}
+{/* 報酬表示（災害支援投稿の場合は非表示） */}
+                      {!((post.tags && post.tags.includes('プライベート連絡先')) || 
+                         (post.category === 'other' && post.title && 
+                          (post.title.includes('支援') || post.title.includes('災害') || post.title.includes('リクエスト') || 
+                           post.title.includes('ボランティア') || post.title.includes('台風') || post.title.includes('みつね') || 
+                           post.title.includes('テスト'))) || 
+                         post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d') && (
+                        post.reward_type === 'non_money' ? (
+                          <span className="font-bold text-sm text-green-600 max-w-24 truncate">
+                            {post.reward_details || '非金銭報酬'}
+                          </span>
+                        ) : post.reward_type === 'both' ? (
+                          <span className="font-bold text-sm text-blue-600 max-w-32 truncate">
+                            {post.reward_details || '金銭+現物'}
+                          </span>
+                        ) : post.reward_type === 'free' ? (
+                          <span className="font-bold text-sm text-purple-600">
+                            無償・体験
+                          </span>
+                        ) : post.price !== null && post.price !== undefined ? (
+                          <span className="font-bold text-xl text-emerald-600">
+                            ¥{post.price.toLocaleString()}
+                          </span>
+                        ) : null
+                      )}
                     </div>
                     <h3 className="font-semibold text-xl mb-3 line-clamp-2">
                       {post.title}
