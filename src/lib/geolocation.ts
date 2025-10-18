@@ -48,14 +48,11 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c
 }
 
-// 八丈島内かどうかの判定
+// 八丈島内かどうかの判定（10km圏内を含む）
 export function isInHachijoIsland(lat: number, lng: number): boolean {
-  return (
-    lat >= HACHIJO_ISLAND_BOUNDS.south &&
-    lat <= HACHIJO_ISLAND_BOUNDS.north &&
-    lng >= HACHIJO_ISLAND_BOUNDS.west &&
-    lng <= HACHIJO_ISLAND_BOUNDS.east
-  )
+  // 八丈島中心から10km以内なら「島内」とする
+  const distance = getDistanceFromHachijo(lat, lng)
+  return distance <= 10
 }
 
 // 八丈島からの距離を計算
