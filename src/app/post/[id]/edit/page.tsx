@@ -96,25 +96,43 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
       
       if (isDisasterPost) {
         // 災害支援投稿の場合
+        const description = formData.get('content')
+        const contact = formData.get('contact')
+        
+        if (!description || !contact) {
+          setError('内容と連絡先は必須項目です')
+          return
+        }
+        
         updateData = {
-          description: formData.get('content'),
-          contact: formData.get('contact'),
+          description: description.toString(),
+          contact: contact.toString(),
           updated_at: new Date().toISOString()
         }
       } else {
         // 通常投稿の場合
+        const title = formData.get('title')
+        const description = formData.get('content')
+        const category = formData.get('category')
+        const contact = formData.get('contact')
+        
+        if (!title || !description || !category || !contact) {
+          setError('タイトル、内容、カテゴリ、連絡先は必須項目です')
+          return
+        }
+        
         updateData = {
-          title: formData.get('title'),
-          description: formData.get('content'),
-          category: formData.get('category'),
-          contact: formData.get('contact'),
+          title: title.toString(),
+          description: description.toString(),
+          category: category.toString(),
+          contact: contact.toString(),
           tags: formData.get('tags')?.toString().split(',').map(tag => tag.trim()).filter(Boolean) || [],
-          reward_type: formData.get('reward_type') || null,
-          reward_details: formData.get('reward_details') || null,
-          requirements: formData.get('requirements') || null,
+          reward_type: formData.get('reward_type')?.toString() || null,
+          reward_details: formData.get('reward_details')?.toString() || null,
+          requirements: formData.get('requirements')?.toString() || null,
           age_friendly: formData.get('age_friendly') === 'on',
-          map_link: formData.get('map_link') || null,
-          iframe_embed: formData.get('iframe_embed') || null,
+          map_link: formData.get('map_link')?.toString() || null,
+          iframe_embed: formData.get('iframe_embed')?.toString() || null,
           updated_at: new Date().toISOString()
         }
       }
@@ -128,14 +146,19 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
       if (error) {
         console.error('Supabase update error:', error)
-        throw new Error('投稿の更新に失敗しました')
+        setError(`投稿の更新に失敗しました: ${error.message || JSON.stringify(error)}`)
+        return
       }
 
+      console.log('✅ Update successful')
+      alert('投稿が更新されました！')
+      
       // 更新成功 - 詳細ページに戻る
       router.push(`/post/${post.id}`)
     } catch (error) {
       console.error('更新エラー:', error)
-      setError('投稿の更新に失敗しました')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setError(`投稿の更新に失敗しました: ${errorMessage}`)
     } finally {
       setSubmitting(false)
     }
