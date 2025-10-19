@@ -38,26 +38,23 @@ export default function InfoPortalLinks({ className = '' }: InfoPortalLinksProps
   }
 
   return (
-    <div className={`w-full ${className}`}>
-      <div className="mb-3">
-        <h3 className="text-lg font-semibold text-gray-800">八丈島情報ポータル</h3>
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+    <div className={`${className}`}>
+      {/* 全デバイスで横並びのコンパクト表示 */}
+      <div className="grid grid-cols-2 gap-2 max-w-lg">
         {portalLinks.map((link) => (
           <Card
             key={link.id}
-            className={`${link.color} border-2 border-gray-200 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] hover:border-gray-300`}
+            className={`${link.color} border border-gray-200 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] hover:border-gray-300`}
             onClick={() => handleClick(link.url)}
           >
             <div className="p-2 text-center">
-              <h4 className="font-bold text-gray-800 text-sm mb-1">
+              <h4 className="font-semibold text-gray-800 text-sm mb-1 leading-tight">
                 {link.title}
               </h4>
-              <p className="text-xs text-gray-600 leading-tight">
+              <p className="text-xs text-gray-600 leading-tight mb-1">
                 {link.description}
               </p>
-              <div className="mt-1 text-xs text-blue-600">
+              <div className="text-xs text-blue-600">
                 クリックで開く →
               </div>
             </div>

@@ -222,32 +222,6 @@ export default function HomePage() {
         */}
 
         <div className="flex gap-4">
-          {/* ステータスフィルター（管理者のみ） */}
-          {isAdmin && (
-            <div className="flex gap-2 whitespace-nowrap">
-              <button
-                onClick={() => setStatusFilter('active')}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
-                  statusFilter === 'active'
-                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg transform scale-105'
-                    : 'bg-white border-2 border-green-300 text-green-700 hover:border-green-400 hover:bg-green-50'
-                }`}
-              >
-                ✅ 公開中
-              </button>
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
-                  statusFilter === 'all'
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105'
-                    : 'bg-white border-2 border-blue-300 text-blue-700 hover:border-blue-400 hover:bg-blue-50'
-                }`}
-              >
-                📋 全て
-              </button>
-            </div>
-          )}
-
           {/* 表示モード切り替え */}
           <div className="flex gap-2 whitespace-nowrap">
             <button
