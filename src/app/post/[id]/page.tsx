@@ -212,22 +212,6 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </div>
         )}
 
-        {/* タグ表示 */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="mb-6">
-            <h4 className="font-semibold text-gray-800 mb-3">🏷️ タグ</h4>
-            <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* 年少者参加可能フラグ */}
         {post.age_friendly && (
