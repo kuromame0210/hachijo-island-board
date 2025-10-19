@@ -275,46 +275,8 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </div>
         )}
 
-        {/* 災害支援投稿の場合は連絡先セクション全体を非表示 */}
-        {(() => {
-          // 災害支援カテゴリのタグで判定
-          const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
-          const hasDisasterCategoryTag = post.tags && post.tags.some(tag => disasterCategories.includes(tag))
-          
-          // タイトルベースの判定（既存の投稿との互換性のため）
-          const hasDisasterKeywords = post.title && (
-            post.title.includes('倒木を除去してほしい') || 
-            post.title.includes('水を持ってきて欲しい') ||
-            post.title.includes('移動したい') ||
-            post.title.includes('買い出しをお願いしたい') ||
-            post.title.includes('支援') || 
-            post.title.includes('災害') || 
-            post.title.includes('リクエスト') || 
-            post.title.includes('ボランティア') || 
-            post.title.includes('台風') || 
-            post.title.includes('みつね') ||
-            post.title.includes('テスト') // テスト用に追加
-          );
-          
-          // 特定の投稿IDでも判定（テスト用）
-          const isSpecificDisasterPost = post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d';
-          
-          const isDisasterPost = hasDisasterCategoryTag || hasDisasterKeywords || isSpecificDisasterPost;
-          
-          console.log('🔍 DETAIL PAGE: Contact visibility check for post:', post.id);
-          console.log('  - Title:', post.title);
-          console.log('  - Category:', post.category);
-          console.log('  - Tags:', post.tags);
-          console.log('  - Has disaster tag:', hasDisasterCategoryTag);
-          console.log('  - Has disaster keywords:', hasDisasterKeywords);
-          console.log('  - Is specific disaster post:', isSpecificDisasterPost);
-          console.log('  - Final isDisasterPost:', isDisasterPost);
-          console.log('  - Will show contact section:', !isDisasterPost);
-          console.log('  - Current contact value:', post.contact);
-          console.log('  - Current description:', post.description);
-          
-          return !isDisasterPost;
-        })() && (
+        {/* 連絡先セクションを一時的に非表示 */}
+        {false && (
           <div className="border-t border-gray-300 pt-6">
             <h3 className="font-semibold mb-3">📞 連絡先</h3>
             <p className="text-lg bg-blue-50 p-4 rounded-lg font-mono border border-blue-200">

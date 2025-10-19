@@ -46,6 +46,7 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [statusFilter, setStatusFilter] = useState<'active' | 'all'>('active')
   const [isAdmin, setIsAdmin] = useState(false)
+  const [showPortalLinks, setShowPortalLinks] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { locationResult, hasAskedPermission, requestLocation, lastChecked } = useLocation()
 
@@ -279,9 +280,27 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 情報ポータルリンク */}
+      {/* 情報ポータルリンク - タブ切り替え対応 */}
       <div className="mb-6">
-        <InfoPortalLinks className="mb-4" />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-800">🌐 八丈島情報ポータル</h2>
+          <button
+            onClick={() => setShowPortalLinks(!showPortalLinks)}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
+              showPortalLinks
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {showPortalLinks ? '🔼 閉じる' : '🔽 表示'}
+          </button>
+        </div>
+        
+        {showPortalLinks && (
+          <div className="transition-all duration-200 ease-in-out">
+            <InfoPortalLinks className="mb-4" />
+          </div>
+        )}
       </div>
 
       {/* カテゴリフィルター無効化により仕事カテゴリ選択時のアクセス制限も削除 */}

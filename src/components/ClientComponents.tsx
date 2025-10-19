@@ -24,10 +24,10 @@ export default function ClientComponents() {
       )}
       {isIslander && (
         <a
-          href="/new"
-          className="md:hidden bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors duration-200 text-xs"
+          href="/disaster/new"
+          className="md:hidden bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors duration-200 text-xs"
         >
-          投稿
+          🆘リクエスト
         </a>
       )}
       <MobileMenu />
