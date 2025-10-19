@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import GoogleMapEmbed from '@/components/GoogleMapEmbed'
+import CommentSection from '@/components/CommentSection'
 import { Post } from '@/types'
 import { useLocationAccess } from '@/hooks/useLocationAccess'
 
@@ -66,27 +67,54 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showEditWarning, setShowEditWarning] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const { canPost } = useLocationAccess()
+
+  // 管理者認証状態チェック
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('admin-auth')
+    setIsAdmin(authStatus === 'authenticated')
+  }, [])
+
+  // 管理者ログアウト
+  const handleAdminLogout = () => {
+    if (confirm('管理者モードをログアウトしますか？')) {
+      sessionStorage.removeItem('admin-auth')
+      sessionStorage.removeItem('admin-login-time')
+      setIsAdmin(false)
+      alert('管理者モードからログアウトしました')
+    }
+  }
 
   useEffect(() => {
     const fetchPost = async () => {
       const { id } = await params
+      console.log('🔍 DETAIL PAGE: Fetching post data for ID:', id)
 
       // デモ用: 広告IDの場合はハードコードされたデータを返す
       if (id.startsWith('ad-')) {
         const adPost = advertisementCards.find(ad => ad.id === id)
+        console.log('📺 DETAIL PAGE: Loading ad post:', adPost?.title)
         setPost(adPost || null)
         setLoading(false)
         return
       }
 
       // 通常の投稿はデータベースから取得（activeステータスのみ）
-      const { data } = await supabase
+      console.log('📡 DETAIL PAGE: Fetching from Supabase...')
+      const { data, error } = await supabase
         .from('hachijo_post_board')
         .select('*')
         .eq('id', id)
         .eq('status', 'active')  // activeステータスのみ取得
         .single()
+
+      console.log('📨 DETAIL PAGE: Supabase response:')
+      console.log('  - Error:', error)
+      console.log('  - Data:', data)
+      console.log('  - Description:', data?.description)
+      console.log('  - Contact:', data?.contact)
+      console.log('  - Updated at:', data?.updated_at)
 
       setPost(data)
       setLoading(false)
@@ -94,6 +122,29 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
     fetchPost()
   }, [params])
+
+  // URLのクエリパラメータが変更された場合も再取得
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.has('t')) {
+        // 強制リロードのクエリパラメータがある場合は再取得
+        const fetchPost = async () => {
+          const { id } = await params
+          if (!id.startsWith('ad-')) {
+            const { data } = await supabase
+              .from('hachijo_post_board')
+              .select('*')
+              .eq('id', id)
+              .eq('status', 'active')
+              .single()
+            setPost(data)
+          }
+        }
+        fetchPost()
+      }
+    }
+  }, [])
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
@@ -248,15 +299,17 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           
           const isDisasterPost = hasDisasterCategoryTag || hasDisasterKeywords || isSpecificDisasterPost;
           
-          console.log('Contact visibility check:', {
-            title: post.title,
-            category: post.category,
-            tags: post.tags,
-            hasDisasterCategoryTag: hasDisasterCategoryTag,
-            hasDisasterKeywords: hasDisasterKeywords,
-            isDisasterPost: isDisasterPost,
-            showContact: !isDisasterPost
-          });
+          console.log('🔍 DETAIL PAGE: Contact visibility check for post:', post.id);
+          console.log('  - Title:', post.title);
+          console.log('  - Category:', post.category);
+          console.log('  - Tags:', post.tags);
+          console.log('  - Has disaster tag:', hasDisasterCategoryTag);
+          console.log('  - Has disaster keywords:', hasDisasterKeywords);
+          console.log('  - Is specific disaster post:', isSpecificDisasterPost);
+          console.log('  - Final isDisasterPost:', isDisasterPost);
+          console.log('  - Will show contact section:', !isDisasterPost);
+          console.log('  - Current contact value:', post.contact);
+          console.log('  - Current description:', post.description);
           
           return !isDisasterPost;
         })() && (
@@ -268,6 +321,9 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </div>
         )}
 
+        {/* 管理者専用：災害支援の連絡先表示（投稿詳細では非表示、管理画面でのみ表示） */}
+        {/* この機能は管理画面(/admin)でのみ利用可能です */}
+
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-between items-start">
           <Link
             href="/"
@@ -276,15 +332,30 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
             ← 一覧に戻る
           </Link>
           
-{/* 広告投稿は編集できないようにする */}
-          {!post.id.startsWith('ad-') && canPost && (
-            <button
-              onClick={() => setShowEditWarning(true)}
-              className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 h-8 px-3 py-1 text-gray-600"
-            >
-              🔧 編集
-            </button>
-          )}
+          <div className="flex gap-2">
+            {/* 管理者専用機能（非表示） */}
+            {isAdmin && (
+              <>
+                {/* 管理画面リンクを非表示 */}
+                <button
+                  onClick={handleAdminLogout}
+                  className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 h-8 px-3 py-1 text-gray-600"
+                >
+                  🔓 ログアウト
+                </button>
+                
+                {/* 編集機能は管理者専用 */}
+                {!post.id.startsWith('ad-') && (
+                  <button
+                    onClick={() => setShowEditWarning(true)}
+                    className="inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 h-8 px-3 py-1 text-blue-600"
+                  >
+                    🔧 管理者編集
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
           </div>
         </Card>
@@ -296,12 +367,16 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
       </div>
     </div>
 
-    {/* 編集確認ダイアログ */}
+    {/* コメントセクション */}
+    <CommentSection postId={post.id} />
+
+    {/* 管理者編集確認ダイアログ */}
     {showEditWarning && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-          <h3 className="text-lg font-semibold mb-4">投稿を編集しますか？</h3>
+          <h3 className="text-lg font-semibold mb-4 text-blue-800">🛠️ 管理者権限で編集</h3>
           <p className="text-gray-600 mb-6">
+            管理者として投稿を編集します。<br/>
             データベースが変更され、元に戻せません。<br/>
             編集を続行しますか？
           </p>
@@ -319,7 +394,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              編集する
+              管理者編集を開始
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -49,6 +50,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   useEffect(() => {
     const fetchPost = async () => {
       const { id } = await params
+      console.log('🔍 Edit page loading for post ID:', id)
+      console.log('🌍 Location status:', { hasAskedPermission, locationResult, canPost })
       
       // 広告投稿は編集不可
       if (id.startsWith('ad-')) {
@@ -57,9 +60,10 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         return
       }
       
-          // 位置制限チェック（島民のみ編集可能）
-      if (hasAskedPermission && locationResult.status === 'success' && !canPost) {
-        setError('編集機能は八丈島内、または過去2週間以内に島内からアクセスした記録がある方のみご利用いただけます。')
+      // 管理者権限チェック（編集は管理者のみ）
+      const adminAuth = sessionStorage.getItem('admin-auth')
+      if (adminAuth !== 'authenticated') {
+        setError('編集機能は管理者のみご利用いただけます。管理者としてログインしてください。')
         setLoading(false)
         return
       }
@@ -181,12 +185,28 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     e.preventDefault()
     if (!post) return
 
-    console.log('🚀 handleSubmit called!')
+    console.log('🚀 handleSubmit START for post:', post.id)
+    console.log('📝 Current post data BEFORE edit:', {
+      id: post.id,
+      title: post.title,
+      description: post.description,
+      contact: post.contact,
+      category: post.category,
+      tags: post.tags
+    })
+    console.log('📝 Is disaster post:', isDisasterPost)
+    console.log('🖼️ Image state:', {
+      existingImages: existingImages.length,
+      newImages: selectedImages.length,
+      toDelete: imagesToDelete.length
+    })
+    
     setSubmitting(true)
     setError(null)
 
     const formData = new FormData(e.currentTarget)
-    console.log('📝 Form data:', Object.fromEntries(formData.entries()))
+    const formEntries = Object.fromEntries(formData.entries())
+    console.log('📝 Form data from HTML form:', formEntries)
 
     try {
       // 新しい画像をアップロード
@@ -210,7 +230,12 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         const description = formData.get('content')
         const contact = formData.get('contact')
         
+        console.log('🔍 DISASTER POST processing:')
+        console.log('  - description from form:', description)
+        console.log('  - contact from form:', contact)
+        
         if (!description || !contact) {
+          console.log('❌ Validation failed: missing description or contact')
           setError('内容と連絡先は必須項目です')
           return
         }
@@ -222,6 +247,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
           image_url: finalImages.length > 0 ? finalImages[0] : null,
           updated_at: new Date().toISOString()
         }
+        
+        console.log('📦 DISASTER POST update data:', updateData)
       } else {
         // 通常投稿の場合
         const title = formData.get('title')
@@ -252,24 +279,144 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         }
       }
       
-      console.log('📤 Updating post directly via Supabase:', JSON.stringify(updateData, null, 2))
+      console.log('📤 SENDING TO SUPABASE:')
+      console.log('  - Post ID:', post.id)
+      console.log('  - Post ID type:', typeof post.id)
+      console.log('  - Update data:', JSON.stringify(updateData, null, 2))
       
-      const { error } = await supabase
+      // まずレコードが存在するか確認
+      console.log('🔍 PRE-CHECK: レコード存在確認...')
+      const { data: existCheck, error: existError } = await supabase
+        .from('hachijo_post_board')
+        .select('id, title, description, contact, status')
+        .eq('id', post.id)
+      
+      console.log('📋 PRE-CHECK結果:')
+      console.log('  - Error:', existError)
+      console.log('  - Found records:', existCheck)
+      console.log('  - Record count:', existCheck?.length)
+      
+      // 🚨 POLICY TEST: ポリシー制限テスト
+      console.log('🔐 POLICY TEST: 権限テスト...')
+      
+      // テストとして、ポリシーを無視して更新を試す
+      const { data: policyTest, error: policyError } = await supabase
+        .from('hachijo_post_board')
+        .update({ 
+          description: 'テスト更新 ' + Date.now(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', post.id)
+      
+      console.log('🔐 POLICY TEST結果:')
+      console.log('  - Error details:', policyError)
+      console.log('  - Error message:', policyError?.message)
+      console.log('  - Error code:', policyError?.code)
+      console.log('  - Updated:', policyTest)
+      
+      // 権限を確認するため、現在のユーザー情報も取得
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      console.log('👤 Current user:', user)
+      console.log('👤 User error:', userError)
+      
+      // 🔍 詳細デバッグ: 更新条件の確認
+      console.log('🧪 詳細デバッグ開始...')
+      console.log('  - 投稿ID:', post.id)
+      console.log('  - 投稿ステータス:', post.status)
+      console.log('  - 更新しようとするデータ:', updateData)
+      
+      // ステップ1: 直接SELECTで対象投稿を確認
+      const { data: targetPost, error: targetError } = await supabase
+        .from('hachijo_post_board')
+        .select('*')
+        .eq('id', post.id)
+        .eq('status', 'active')
+      
+      console.log('🎯 対象投稿確認:')
+      console.log('  - Error:', targetError)
+      console.log('  - Found post:', targetPost)
+      console.log('  - Count:', targetPost?.length)
+      
+      // ステップ2: 最小限のデータで更新テスト
+      console.log('🧪 最小限更新テスト...')
+      const { data: minimalTest, error: minimalError } = await supabase
+        .from('hachijo_post_board')
+        .update({ 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', post.id)
+        .select()
+      
+      console.log('📝 最小限更新結果:')
+      console.log('  - Error:', minimalError)
+      console.log('  - Error details:', minimalError ? JSON.stringify(minimalError) : 'none')
+      console.log('  - Updated:', minimalTest)
+      console.log('  - Count:', minimalTest?.length)
+      
+      // 元の更新処理（参考用）
+      const { data: updateResult, error } = await supabase
         .from('hachijo_post_board')
         .update(updateData)
         .eq('id', post.id)
+        .select() // 更新後のデータを取得
+
+      console.log('📨 SUPABASE RESPONSE:')
+      console.log('  - Error:', error)
+      console.log('  - Updated data returned:', updateResult)
 
       if (error) {
-        console.error('Supabase update error:', error)
+        console.error('❌ Supabase update error:', error)
         setError(`投稿の更新に失敗しました: ${error.message || JSON.stringify(error)}`)
         return
       }
 
-      console.log('✅ Update successful')
-      alert('投稿が更新されました！')
+      console.log('✅ Update successful for post:', post.id)
       
-      // 更新成功 - 詳細ページに戻る
-      router.push(`/post/${post.id}`)
+      // 更新後のデータを確認するために再取得
+      console.log('🔍 VERIFYING UPDATE - fetching latest data...')
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('hachijo_post_board')
+        .select('*')
+        .eq('id', post.id)
+        .single()
+      
+      console.log('📊 VERIFICATION RESULT:')
+      console.log('  - Verify error:', verifyError)
+      console.log('  - Current data in DB:', verifyData)
+      
+      console.log('💾 最終確認: データベースの更新状況')
+      console.log('  - 更新送信データ:', updateData)
+      console.log('  - DB確認結果:', verifyData)
+      console.log('  - 更新前データ:', {
+        description: post.description,
+        contact: post.contact
+      })
+      console.log('  - 更新後データ:', verifyData ? {
+        description: verifyData.description,
+        contact: verifyData.contact
+      } : 'データなし')
+      
+      // 実際に更新されたかチェック
+      const wasUpdated = verifyData && (
+        verifyData.description !== post.description ||
+        verifyData.contact !== post.contact
+      )
+      
+      console.log('🔍 更新判定:', wasUpdated ? '成功' : '失敗')
+      
+      if (wasUpdated) {
+        alert('✅ 投稿が正常に更新されました！')
+        // 成功時のリダイレクト
+        if (typeof window !== 'undefined') {
+          window.location.href = `/post/${post.id}?t=${Date.now()}`
+        } else {
+          router.push(`/post/${post.id}`)
+        }
+      } else {
+        alert('❌ 更新に失敗しました。Supabaseのポリシー設定を確認してください。')
+        console.error('❌ 更新失敗: データベースの内容が変更されていません')
+        setError('更新に失敗しました。データベースのポリシー設定を確認してください。')
+      }
     } catch (error) {
       console.error('更新エラー:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
@@ -316,8 +463,13 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     <div className="max-w-4xl mx-auto p-4">
       <Card className="p-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">投稿を編集</h1>
-          <p className="text-gray-600">投稿内容を修正できます</p>
+          <h1 className="text-3xl font-bold text-blue-900 mb-2">🛠️ 管理者編集</h1>
+          <p className="text-blue-700">管理者権限で投稿内容を修正できます</p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+            <p className="text-sm text-blue-800">
+              ✅ 管理者としてログイン中 - 全ての投稿を編集可能
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
