@@ -280,7 +280,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           <div className="border-t border-gray-300 pt-6">
             <h3 className="font-semibold mb-3">📞 連絡先</h3>
             <p className="text-lg bg-blue-50 p-4 rounded-lg font-mono border border-blue-200">
-              {post.contact}
+              {post?.contact}
             </p>
           </div>
         )}
