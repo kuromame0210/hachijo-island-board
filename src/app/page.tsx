@@ -152,7 +152,7 @@ export default function HomePage() {
                 </div>
               )}
               <button
-                onClick={requestLocation}
+                onClick={() => requestLocation(true)}
                 className="px-6 py-3 text-base font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-xl transition-all shadow-lg transform hover:scale-105"
               >
                 位置情報を再検出する

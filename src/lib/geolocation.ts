@@ -98,7 +98,7 @@ export async function detectHachijoLocation(): Promise<LocationResult> {
     const options = {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 300000 // 5分間キャッシュ
+      maximumAge: 0 // キャッシュを使用しない（常に最新位置情報を取得）
     }
 
     navigator.geolocation.getCurrentPosition(

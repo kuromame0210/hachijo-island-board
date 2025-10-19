@@ -28,7 +28,7 @@ export default function LocationDetector() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={requestLocation}
+              onClick={() => requestLocation(true)}
               disabled={isLoading}
               className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
             >

@@ -26,10 +26,16 @@ export function useLocation() {
   const [isHydrated, setIsHydrated] = useState(false)
 
   // 位置情報を取得する関数
-  const requestLocation = async () => {
-    console.log('位置情報取得開始')
+  const requestLocation = async (forceRefresh = false) => {
+    console.log('位置情報取得開始', forceRefresh ? '（強制再取得）' : '')
     setHasAskedPermission(true)
     setLocationResult(prev => ({ ...prev, status: 'loading' }))
+    
+    // 強制再取得の場合はキャッシュをクリア
+    if (forceRefresh) {
+      localStorage.removeItem('hachijo-location-status')
+      console.log('位置情報キャッシュをクリアしました')
+    }
 
     try {
       // ブラウザサポートチェック
@@ -177,7 +183,7 @@ export function useLocation() {
 
         // キャッシュが24時間以上経過している場合は自動的に再取得
         console.log('キャッシュ期限切れ：位置情報を自動再取得します')
-        requestLocation()
+        requestLocation(true) // 強制再取得
         return
       } catch (e) {
         console.warn('位置情報キャッシュの解析に失敗:', e)
