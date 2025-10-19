@@ -16,6 +16,14 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDisasterPost, setIsDisasterPost] = useState(false)
+  
+  // 画像関連のstate
+  const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([])
+  
   const router = useRouter()
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost } = useLocationAccess()
@@ -69,6 +77,10 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
         setPost(data)
         setIsDisasterPost(checkIfDisasterPost(data))
+        
+        // 既存画像を設定
+        const images = data.images && data.images.length > 0 ? data.images : (data.image_url ? [data.image_url] : [])
+        setExistingImages(images)
       } catch (error) {
         console.error('投稿取得エラー:', error)
         setError('投稿の取得に失敗しました')
@@ -79,6 +91,91 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
     fetchPost()
   }, [params, router, hasAskedPermission, locationResult.status, canPost])
+
+  // 画像選択処理
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const totalImages = existingImages.length - imagesToDelete.length + selectedImages.length
+    const newImages = files.slice(0, 5 - totalImages)
+
+    if (totalImages + newImages.length > 5) {
+      alert('画像は最大5枚まで選択できます')
+      return
+    }
+
+    setSelectedImages(prev => [...prev, ...newImages])
+
+    // プレビューを作成
+    newImages.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target?.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  // 新しい画像の削除
+  const removeNewImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index))
+    setImagePreviews(prev => prev.filter((_, i) => i !== index))
+    if (selectedImageIndex >= imagePreviews.length - 1) {
+      setSelectedImageIndex(Math.max(0, imagePreviews.length - 2))
+    }
+  }
+
+  // 既存画像の削除マーク
+  const markExistingImageForDeletion = (imageUrl: string) => {
+    if (imagesToDelete.includes(imageUrl)) {
+      setImagesToDelete(prev => prev.filter(url => url !== imageUrl))
+    } else {
+      setImagesToDelete(prev => [...prev, imageUrl])
+    }
+  }
+
+  // 画像のアップロード
+  const uploadImages = async (): Promise<string[]> => {
+    const uploadedUrls: string[] = []
+    
+    for (const image of selectedImages) {
+      const fileName = `post-${Date.now()}-${Math.random().toString(36).substring(2)}.${image.name.split('.').pop()}`
+      
+      const { error } = await supabase.storage
+        .from('hachijo-board-posts')
+        .upload(fileName, image)
+
+      if (error) {
+        console.error('Image upload error:', error)
+        throw new Error(`画像のアップロードに失敗しました: ${error.message}`)
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('hachijo-board-posts')
+        .getPublicUrl(fileName)
+
+      uploadedUrls.push(publicUrl)
+    }
+
+    return uploadedUrls
+  }
+
+  // 不要な画像の削除
+  const deleteImages = async (imageUrls: string[]) => {
+    for (const imageUrl of imageUrls) {
+      try {
+        // URLからファイル名を抽出
+        const fileName = imageUrl.split('/').pop()
+        if (fileName) {
+          await supabase.storage
+            .from('hachijo-board-posts')
+            .remove([fileName])
+        }
+      } catch (error) {
+        console.error('Image deletion error:', error)
+        // 削除エラーは致命的ではないので続行
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -92,6 +189,20 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     console.log('📝 Form data:', Object.fromEntries(formData.entries()))
 
     try {
+      // 新しい画像をアップロード
+      const newImageUrls = await uploadImages()
+      
+      // 削除対象でない既存画像を残す
+      const remainingImages = existingImages.filter(url => !imagesToDelete.includes(url))
+      
+      // 最終的な画像リスト
+      const finalImages = [...remainingImages, ...newImageUrls]
+      
+      // 不要な画像を削除
+      if (imagesToDelete.length > 0) {
+        await deleteImages(imagesToDelete)
+      }
+      
       let updateData: Record<string, unknown> = {}
       
       if (isDisasterPost) {
@@ -107,6 +218,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         updateData = {
           description: description.toString(),
           contact: contact.toString(),
+          images: finalImages,
+          image_url: finalImages.length > 0 ? finalImages[0] : null,
           updated_at: new Date().toISOString()
         }
       } else {
@@ -126,6 +239,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
           description: description.toString(),
           category: category.toString(),
           contact: contact.toString(),
+          images: finalImages,
+          image_url: finalImages.length > 0 ? finalImages[0] : null,
           tags: formData.get('tags')?.toString().split(',').map(tag => tag.trim()).filter(Boolean) || [],
           reward_type: formData.get('reward_type')?.toString() || null,
           reward_details: formData.get('reward_details')?.toString() || null,
@@ -299,6 +414,92 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
               rows={isDisasterPost ? 3 : 1}
               required
             />
+          </div>
+
+          {/* 画像編集セクション */}
+          <div>
+            <label className="text-lg font-medium mb-2 block">
+              画像（最大5枚）
+            </label>
+            
+            {/* 既存画像 */}
+            {existingImages.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-medium mb-2">現在の画像</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {existingImages.map((imageUrl, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={imageUrl}
+                        alt={`既存画像 ${index + 1}`}
+                        className={`w-full h-24 object-cover rounded-lg border-2 ${
+                          imagesToDelete.includes(imageUrl) 
+                            ? 'border-red-500 opacity-50' 
+                            : 'border-gray-300'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => markExistingImageForDeletion(imageUrl)}
+                        className={`absolute top-1 right-1 w-6 h-6 rounded-full text-white text-sm font-bold ${
+                          imagesToDelete.includes(imageUrl)
+                            ? 'bg-gray-500 hover:bg-gray-600'
+                            : 'bg-red-500 hover:bg-red-600'
+                        }`}
+                      >
+                        {imagesToDelete.includes(imageUrl) ? '↶' : '×'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 新しい画像 */}
+            {imagePreviews.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-medium mb-2">新しい画像</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={preview}
+                        alt={`新しい画像 ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border-2 border-blue-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeNewImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-sm font-bold hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 画像追加ボタン */}
+            {existingImages.length - imagesToDelete.length + selectedImages.length < 5 && (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <label className="cursor-pointer">
+                  <div className="text-gray-500 mb-2">
+                    📷 画像を追加（残り{5 - (existingImages.length - imagesToDelete.length + selectedImages.length)}枚）
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    クリックまたはドラッグ&ドロップ
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
           </div>
 
           {/* 通常投稿のみ表示するフィールド */}
