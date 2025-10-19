@@ -5,6 +5,7 @@ export interface Post {
   category: string
   contact: string  // 必須フィールド
   created_at: string
+  status: string  // 投稿ステータス（active, hidden, deleted）
   // オプショナルフィールド
   location?: string
   updated_at?: string

@@ -13,7 +13,20 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [posts, setPosts] = useState<Post[]>([])
-  const [comments, setComments] = useState<any[]>([])
+  const [comments, setComments] = useState<{
+    id: string
+    post_id: string
+    content: string
+    author_name: string | null
+    session_id: string | null
+    created_at: string
+    updated_at: string
+    status: string
+    hachijo_post_board?: {
+      id: string
+      title: string
+    }
+  }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'hidden'>('all')
@@ -141,6 +154,13 @@ export default function AdminPage() {
     const actionText = newStatus === 'hidden' ? '非表示' : '表示'
     const currentText = currentStatus === 'active' ? '公開中' : '非表示'
     
+    console.log('🔧 DEBUG: ステータス変更開始')
+    console.log('  - Post ID:', postId)
+    console.log('  - Current Status:', currentStatus)
+    console.log('  - New Status:', newStatus)
+    console.log('  - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('  - Has Anon Key:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    
     // 確認ダイアログ
     const confirmed = confirm(
       `投稿を${actionText}に変更しますか？\n\n` +
@@ -150,20 +170,47 @@ export default function AdminPage() {
     )
     
     if (!confirmed) {
-      return // ユーザーがキャンセルした場合は何もしない
+      console.log('🔧 DEBUG: ユーザーがキャンセル')
+      return
     }
 
     try {
-      const { error } = await supabase
+      console.log('🔧 DEBUG: Supabase更新リクエスト送信')
+      const updateData = { 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      }
+      console.log('  - Update data:', updateData)
+      
+      const { data, error, count } = await supabase
         .from('hachijo_post_board')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', postId)
+        .select() // 更新されたデータを取得
 
-      if (error) throw error
+      console.log('🔧 DEBUG: Supabase応答')
+      console.log('  - Error:', error)
+      console.log('  - Data:', data)
+      console.log('  - Count:', count)
+      console.log('  - Updated records:', data?.length || 0)
 
+      if (error) {
+        console.error('🔧 DEBUG: Supabaseエラー詳細:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        })
+        throw error
+      }
+
+      if (!data || data.length === 0) {
+        console.error('🔧 DEBUG: 更新対象が見つからない')
+        throw new Error('更新対象の投稿が見つかりません')
+      }
+
+      console.log('🔧 DEBUG: 更新成功')
+      
       // ローカル状態を更新
       setPosts(posts.map(post => 
         post.id === postId 
@@ -174,6 +221,7 @@ export default function AdminPage() {
       // 成功メッセージ
       alert(`投稿を${actionText}に変更しました`)
     } catch (error) {
+      console.error('🔧 DEBUG: キャッチされたエラー:', error)
       console.error('ステータス更新エラー:', error)
       alert('ステータスの更新に失敗しました')
     }
@@ -446,7 +494,7 @@ export default function AdminPage() {
                       <span>ID: {post.id.slice(0, 8)}</span>
                       <span>カテゴリ: {post.category}</span>
                       <span>作成: {new Date(post.created_at).toLocaleDateString('ja-JP')}</span>
-                      {post.updated_at !== post.created_at && (
+                      {post.updated_at && post.updated_at !== post.created_at && (
                         <span>更新: {new Date(post.updated_at).toLocaleDateString('ja-JP')}</span>
                       )}
                     </div>

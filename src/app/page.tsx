@@ -44,6 +44,8 @@ export default function HomePage() {
   const selectedCategory = 'all'
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [statusFilter, setStatusFilter] = useState<'active' | 'all'>('active')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { locationResult, hasAskedPermission, requestLocation, lastChecked } = useLocation()
 
@@ -56,7 +58,16 @@ export default function HomePage() {
     if (savedViewMode) {
       setViewMode(savedViewMode)
     }
+
+    // 管理者認証状態をチェック
+    const authStatus = sessionStorage.getItem('admin-auth')
+    setIsAdmin(authStatus === 'authenticated')
   }, [])
+
+  // ステータスフィルターが変更された時にデータを再取得
+  useEffect(() => {
+    fetchPosts()
+  }, [statusFilter])
 
   // カテゴリフィルター無効化時の投稿リスト（島民以外は仕事カテゴリを除外）
   const filteredPosts = useMemo(() => {
@@ -75,11 +86,19 @@ export default function HomePage() {
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      // 管理者の場合は全ステータス、一般ユーザーはactiveのみ
+      let query = supabase
         .from('hachijo_post_board')
         .select('*')
-        .eq('status', 'active')  // activeステータスのみ取得
-        .order('created_at', { ascending: false })
+
+      // ステータスフィルターを適用
+      if (statusFilter === 'active' || !isAdmin) {
+        // 一般ユーザーまたは管理者が「公開中」を選択した場合
+        query = query.eq('status', 'active')
+      }
+      // 管理者が「全て」を選択した場合は、ステータス条件を追加しない
+
+      const { data, error } = await query.order('created_at', { ascending: false })
 
       if (error) {
         console.error('Supabase error:', error)
@@ -201,33 +220,62 @@ export default function HomePage() {
         </div>
         */}
 
-        <div className="flex gap-2 whitespace-nowrap">
-          <button
-            onClick={() => {
-              setViewMode('list')
-              localStorage.setItem('viewMode', 'list')
-            }}
-            className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
-              viewMode === 'list'
-                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
-                : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-            }`}
-          >
-            📋 リスト
-          </button>
-          <button
-            onClick={() => {
-              setViewMode('grid')
-              localStorage.setItem('viewMode', 'grid')
-            }}
-            className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
-              viewMode === 'grid'
-                ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
-                : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-            }`}
-          >
-            ⊞ カード
-          </button>
+        <div className="flex gap-4">
+          {/* ステータスフィルター（管理者のみ） */}
+          {isAdmin && (
+            <div className="flex gap-2 whitespace-nowrap">
+              <button
+                onClick={() => setStatusFilter('active')}
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
+                  statusFilter === 'active'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg transform scale-105'
+                    : 'bg-white border-2 border-green-300 text-green-700 hover:border-green-400 hover:bg-green-50'
+                }`}
+              >
+                ✅ 公開中
+              </button>
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-4 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
+                  statusFilter === 'all'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105'
+                    : 'bg-white border-2 border-blue-300 text-blue-700 hover:border-blue-400 hover:bg-blue-50'
+                }`}
+              >
+                📋 全て
+              </button>
+            </div>
+          )}
+
+          {/* 表示モード切り替え */}
+          <div className="flex gap-2 whitespace-nowrap">
+            <button
+              onClick={() => {
+                setViewMode('list')
+                localStorage.setItem('viewMode', 'list')
+              }}
+              className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
+                viewMode === 'list'
+                  ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
+                  : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+              }`}
+            >
+              📋 リスト
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('grid')
+                localStorage.setItem('viewMode', 'grid')
+              }}
+              className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
+                viewMode === 'grid'
+                  ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
+                  : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+              }`}
+            >
+              ⊞ カード
+            </button>
+          </div>
         </div>
       </div>
 
@@ -341,6 +389,12 @@ export default function HomePage() {
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getCategoryBadgeColor(post.category)}`}>
                               {getCategoryLabel(post.category as CategoryKey)}
                             </span>
+                            {/* ステータスバッジ（管理者のみ） */}
+                            {isAdmin && post.status !== 'active' && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 ml-1">
+                                🚫 {post.status === 'hidden' ? '非表示' : post.status}
+                              </span>
+                            )}
                             {post.images && post.images.length > 1 && (
                               <span className="text-xs text-gray-500">
                                 📷{post.images.length}
@@ -404,9 +458,17 @@ export default function HomePage() {
                   )}
                   <div className="p-6 bg-gradient-to-b from-white to-slate-50">
                     <div className="flex items-start justify-between mb-2">
-                      <Badge className={getCategoryBadgeColor(post.category)}>
-                        {getCategoryLabel(post.category as CategoryKey)}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getCategoryBadgeColor(post.category)}>
+                          {getCategoryLabel(post.category as CategoryKey)}
+                        </Badge>
+                        {/* ステータスバッジ（管理者のみ） */}
+                        {isAdmin && post.status !== 'active' && (
+                          <Badge className="bg-red-100 text-red-700">
+                            🚫 {post.status === 'hidden' ? '非表示' : post.status}
+                          </Badge>
+                        )}
+                      </div>
 {/* 報酬表示（災害支援投稿の場合は非表示） */}
                       {!(() => {
                         const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
