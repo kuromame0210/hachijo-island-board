@@ -15,9 +15,24 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDisasterPost, setIsDisasterPost] = useState(false)
   const router = useRouter()
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost } = useLocationAccess()
+
+  // 災害支援投稿かどうかを判定
+  const checkIfDisasterPost = (post: Post): boolean => {
+    const hasDisasterTag = post.tags && post.tags.includes('プライベート連絡先')
+    const hasDisasterKeywords = post.title && (
+      post.title.includes('支援') || 
+      post.title.includes('災害') || 
+      post.title.includes('倒木') || 
+      post.title.includes('水を持ってきて') ||
+      post.title.includes('移動したい') ||
+      post.title.includes('買い出し')
+    )
+    return Boolean(hasDisasterTag || hasDisasterKeywords)
+  }
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -30,8 +45,8 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         return
       }
       
-      // 位置制限チェック（島民のみ編集可能）
-      if (!hasAskedPermission || locationResult.status !== 'success' || !canPost) {
+          // 位置制限チェック（島民のみ編集可能）
+      if (hasAskedPermission && locationResult.status === 'success' && !canPost) {
         setError('編集機能は八丈島内、または過去2週間以内に島内からアクセスした記録がある方のみご利用いただけます。')
         setLoading(false)
         return
@@ -49,6 +64,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         if (!data) throw new Error('投稿が見つかりません')
 
         setPost(data)
+        setIsDisasterPost(checkIfDisasterPost(data))
       } catch (error) {
         console.error('投稿取得エラー:', error)
         setError('投稿の取得に失敗しました')
@@ -72,19 +88,31 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
     console.log('📝 Form data:', Object.fromEntries(formData.entries()))
 
     try {
-      const updateData = {
-        title: formData.get('title'),
-        description: formData.get('content'),
-        category: formData.get('category'),
-        contact: formData.get('contact'),
-        tags: formData.get('tags')?.toString().split(',').map(tag => tag.trim()).filter(Boolean) || [],
-        reward_type: formData.get('reward_type') || null,
-        reward_details: formData.get('reward_details') || null,
-        requirements: formData.get('requirements') || null,
-        age_friendly: formData.get('age_friendly') === 'on',
-        map_link: formData.get('map_link') || null,
-        iframe_embed: formData.get('iframe_embed') || null,
-        updated_at: new Date().toISOString()
+      let updateData: Record<string, unknown> = {}
+      
+      if (isDisasterPost) {
+        // 災害支援投稿の場合
+        updateData = {
+          description: formData.get('content'),
+          contact: formData.get('contact'),
+          updated_at: new Date().toISOString()
+        }
+      } else {
+        // 通常投稿の場合
+        updateData = {
+          title: formData.get('title'),
+          description: formData.get('content'),
+          category: formData.get('category'),
+          contact: formData.get('contact'),
+          tags: formData.get('tags')?.toString().split(',').map(tag => tag.trim()).filter(Boolean) || [],
+          reward_type: formData.get('reward_type') || null,
+          reward_details: formData.get('reward_details') || null,
+          requirements: formData.get('requirements') || null,
+          age_friendly: formData.get('age_friendly') === 'on',
+          map_link: formData.get('map_link') || null,
+          iframe_embed: formData.get('iframe_embed') || null,
+          updated_at: new Date().toISOString()
+        }
       }
       
       console.log('📤 Updating post directly via Supabase:', JSON.stringify(updateData, null, 2))
@@ -151,54 +179,69 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* タイトル */}
-          <div>
-            <label className="text-lg font-medium mb-2 block">
-              タイトル <span className="text-red-500">*</span>
-            </label>
-            <Input
-              name="title"
-              defaultValue={post.title}
-              placeholder="例：八丈島で美味しいパン屋さんを探しています"
-              className="text-lg"
-              required
-            />
-          </div>
+          {isDisasterPost ? (
+            // 災害支援投稿の編集フォーム
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">🚨 災害支援要請の編集</h3>
+              <p className="text-sm text-red-700">
+                災害支援投稿ではタイトルとカテゴリは変更できません。内容と連絡先のみ編集可能です。
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* タイトル */}
+              <div>
+                <label className="text-lg font-medium mb-2 block">
+                  タイトル <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  name="title"
+                  defaultValue={post.title}
+                  placeholder="例：八丈島で美味しいパン屋さんを探しています"
+                  className="text-lg"
+                  required
+                />
+              </div>
 
-          {/* カテゴリー */}
-          <div>
-            <label className="text-lg font-medium mb-2 block">
-              カテゴリー <span className="text-red-500">*</span>
-            </label>
-            {/* カテゴリー選択肢を変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
-            <select
-              name="category"
-              defaultValue={post.category}
-              className="w-full px-3 py-2 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="question">💭 質問</option>
-              <option value="info">💡 情報</option>
-              <option value="announcement">📢 お知らせ</option>
-              <option value="event">🎉 イベント</option>
-              <option value="job">💼 仕事</option>
-              <option value="real_estate">🏠 不動産</option>
-              <option value="secondhand">📦 不用品</option>
-              <option value="agriculture">🌱 農業</option>
-              <option value="volunteer">🤝 ボランティア</option>
-              <option value="other">📝 その他</option>
-            </select>
-          </div>
+              {/* カテゴリー */}
+              <div>
+                <label className="text-lg font-medium mb-2 block">
+                  カテゴリー <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="category"
+                  defaultValue={post.category}
+                  className="w-full px-3 py-2 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="question">💭 質問</option>
+                  <option value="info">💡 情報</option>
+                  <option value="announcement">📢 お知らせ</option>
+                  <option value="event">🎉 イベント</option>
+                  <option value="job">💼 仕事</option>
+                  <option value="real_estate">🏠 不動産</option>
+                  <option value="secondhand">📦 不用品</option>
+                  <option value="agriculture">🌱 農業</option>
+                  <option value="volunteer">🤝 ボランティア</option>
+                  <option value="other">📝 その他</option>
+                </select>
+              </div>
+            </>
+          )}
 
           {/* 内容 */}
           <div>
             <label className="text-lg font-medium mb-2 block">
-              内容 <span className="text-red-500">*</span>
+              {isDisasterPost ? '詳細内容' : '内容'} <span className="text-red-500">*</span>
             </label>
             <Textarea
               name="content"
               defaultValue={post.description}
-              placeholder="詳しい内容を書いてください..."
+              placeholder={
+                isDisasterPost 
+                  ? "支援が必要な状況の詳細を記入してください..."
+                  : "詳しい内容を書いてください..."
+              }
               className="text-lg min-h-[200px]"
               required
             />
@@ -209,70 +252,88 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
             <label className="text-lg font-medium mb-2 block">
               連絡先 <span className="text-red-500">*</span>
             </label>
-            <Input
+            {isDisasterPost && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                <p className="text-sm text-green-700 font-medium">
+                  🔒 プライバシー保護：連絡先は一般公開されません<br/>
+                  社協ボランティアチーム（管理者）のみが閲覧し、直接ご連絡いたします
+                </p>
+              </div>
+            )}
+            <Textarea
               name="contact"
               defaultValue={post.contact}
-              placeholder="例：090-1234-5678 または example@email.com"
-              className="text-lg"
+              placeholder={
+                isDisasterPost
+                  ? "電話番号、メールアドレス、SNSアカウントなど"
+                  : "例：090-1234-5678 または example@email.com"
+              }
+              className={`text-lg ${isDisasterPost ? 'bg-blue-50 border-blue-200 font-mono' : ''}`}
+              rows={isDisasterPost ? 3 : 1}
               required
             />
           </div>
 
-          {/* iframe埋め込み */}
-          <div>
-            <label className="text-lg font-medium mb-2 block text-green-700">
-              📍 地図埋め込み（推奨）
-            </label>
-            <Textarea
-              name="iframe_embed"
-              defaultValue={post.iframe_embed || ''}
-              placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
-              className="text-sm font-mono"
-              rows={4}
-            />
-            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800 font-medium mb-1">
-                🗺️ 地図を投稿に直接表示するにはこちらを使用してください
-              </p>
-              <p className="text-sm text-green-700">
-                Googleマップで場所を検索 → 「共有」→「地図を埋め込む」→「HTML」をコピーして貼り付け
-              </p>
-            </div>
-          </div>
+          {/* 通常投稿のみ表示するフィールド */}
+          {!isDisasterPost && (
+            <>
+              {/* iframe埋め込み */}
+              <div>
+                <label className="text-lg font-medium mb-2 block text-green-700">
+                  📍 地図埋め込み（推奨）
+                </label>
+                <Textarea
+                  name="iframe_embed"
+                  defaultValue={post.iframe_embed || ''}
+                  placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
+                  className="text-sm font-mono"
+                  rows={4}
+                />
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium mb-1">
+                    🗺️ 地図を投稿に直接表示するにはこちらを使用してください
+                  </p>
+                  <p className="text-sm text-green-700">
+                    Googleマップで場所を検索 → 「共有」→「地図を埋め込む」→「HTML」をコピーして貼り付け
+                  </p>
+                </div>
+              </div>
 
-          {/* 場所（Googleマップリンク） */}
-          <div>
-            <label className="text-lg font-medium mb-2 block text-gray-600">
-              🔗 場所（Googleマップリンク）
-            </label>
-            <Input
-              name="map_link"
-              defaultValue={post.map_link || ''}
-              placeholder="https://maps.app.goo.gl/... または https://www.google.com/maps/..."
-              className="text-lg"
-            />
-            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800 font-medium mb-1">
-                ℹ️ 「Googleマップで開く」ボタンが表示されます
-              </p>
-              <p className="text-sm text-blue-700">
-                Googleマップで場所を検索 → 「共有」→「リンクをコピー」して貼り付け
-              </p>
-            </div>
-          </div>
+              {/* 場所（Googleマップリンク） */}
+              <div>
+                <label className="text-lg font-medium mb-2 block text-gray-600">
+                  🔗 場所（Googleマップリンク）
+                </label>
+                <Input
+                  name="map_link"
+                  defaultValue={post.map_link || ''}
+                  placeholder="https://maps.app.goo.gl/... または https://www.google.com/maps/..."
+                  className="text-lg"
+                />
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 font-medium mb-1">
+                    ℹ️ 「Googleマップで開く」ボタンが表示されます
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    Googleマップで場所を検索 → 「共有」→「リンクをコピー」して貼り付け
+                  </p>
+                </div>
+              </div>
 
-          {/* タグ */}
-          <div>
-            <label className="text-lg font-medium mb-2 block">
-              タグ（任意）
-            </label>
-            <Input
-              name="tags"
-              defaultValue={post.tags?.join(', ') || ''}
-              placeholder="例：パン, グルメ, おすすめ（カンマ区切り）"
-              className="text-lg"
-            />
-          </div>
+              {/* タグ */}
+              <div>
+                <label className="text-lg font-medium mb-2 block">
+                  タグ（任意）
+                </label>
+                <Input
+                  name="tags"
+                  defaultValue={post.tags?.join(', ') || ''}
+                  placeholder="例：パン, グルメ, おすすめ（カンマ区切り）"
+                  className="text-lg"
+                />
+              </div>
+            </>
+          )}
 
           {/* 求人・仕事関連フィールド */}
           {post.category === 'job' && (
