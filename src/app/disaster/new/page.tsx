@@ -20,12 +20,22 @@ export default function NewDisasterPost() {
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost, isCurrentlyInIsland, hasRecentIslandAccess, lastIslandAccess } = useLocationAccess()
 
+  // 支援カテゴリの選択肢
+  const supportCategories = [
+    { id: 'tree_removal', label: '倒木を除去してほしい' },
+    { id: 'water_supply', label: '水を持ってきて欲しい' },
+    { id: 'transportation', label: '移動したい' },
+    { id: 'shopping', label: '買い出しをお願いしたい' },
+    { id: 'other', label: 'その他' }
+  ]
+
   // フォーム状態（シンプル化）
   const [formData, setFormData] = useState({
-    title: '',               // タイトル（ユーザーが入力）
-    description: '',        // リクエスト内容
-    location_detail: '',    // 場所
-    contact: '',           // 連絡先
+    supportCategory: '',    // 支援カテゴリ
+    title: '',             // タイトル（ユーザーが入力）
+    description: '',       // リクエスト内容
+    location_detail: '',   // 場所
+    contact: '',          // 連絡先
     images: [] as string[] // 被害状況の画像
   })
 
@@ -91,17 +101,28 @@ export default function NewDisasterPost() {
       // 画像をアップロード
       const imageUrls = await uploadImages()
 
+      // 選択されたカテゴリのラベルを取得
+      const selectedCategory = supportCategories.find(cat => cat.id === formData.supportCategory)
+      const categoryLabel = selectedCategory ? selectedCategory.label : ''
+      
+      // タイトルを生成（カテゴリ + 詳細タイトル）
+      const finalTitle = formData.supportCategory === 'other' 
+        ? formData.title // その他の場合は入力されたタイトルをそのまま使用
+        : formData.title 
+          ? `${categoryLabel} - ${formData.title}` // 詳細タイトルがある場合は組み合わせ
+          : categoryLabel // 詳細タイトルがない場合はカテゴリラベルのみ
+
       // 投稿データを準備
       const postData = {
-        title: formData.title, // ユーザーが入力したタイトルをそのまま使用
+        title: finalTitle,
         description: formData.description,
         category: 'other', // 一時的にotherカテゴリを使用（DBの制約更新後にdisaster_supportに変更）
         contact: formData.contact,
         image_url: imageUrls.length > 0 ? imageUrls[0] : null,
         images: imageUrls,
         status: 'active',
-        // 災害支援投稿の識別用タグ
-        tags: ['災害支援', '支援要請', 'プライベート連絡先']
+        // 災害支援投稿の識別用タグ（選択されたカテゴリも追加）
+        tags: ['災害支援', '支援要請', 'プライベート連絡先', formData.supportCategory]
       }
 
       // 既存テーブルに災害支援要請として保存
@@ -143,18 +164,53 @@ export default function NewDisasterPost() {
             </div>
           </div>
 
-          {/* タイトル */}
+          {/* 支援カテゴリ選択 */}
+          <div className="mb-8">
+            <label className="block text-lg font-medium text-gray-800 mb-4">
+              支援内容 <span className="text-red-500">*</span>
+            </label>
+            <div className="space-y-3">
+              {supportCategories.map((category) => (
+                <label
+                  key={category.id}
+                  className="flex items-center p-3 border-2 border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="supportCategory"
+                    value={category.id}
+                    checked={formData.supportCategory === category.id}
+                    onChange={(e) => setFormData(prev => ({...prev, supportCategory: e.target.value}))}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3"
+                    required
+                  />
+                  <span className="text-base font-medium text-gray-700">{category.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* タイトル（常に表示、その他の場合は必須） */}
           <div className="mb-8">
             <label className="block text-lg font-medium text-gray-800 mb-3">
-              タイトル <span className="text-red-500">*</span>
+              詳細タイトル {formData.supportCategory === 'other' && <span className="text-red-500">*</span>}
             </label>
             <Input
               value={formData.title}
               onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))}
-              placeholder="例：みつね地区で倒木の除去が必要です"
+              placeholder={
+                formData.supportCategory === 'other' 
+                  ? "具体的な支援内容を入力してください" 
+                  : "場所や詳細な状況があれば入力してください（任意）"
+              }
               className="text-lg"
-              required
+              required={formData.supportCategory === 'other'}
             />
+            {formData.supportCategory && formData.supportCategory !== 'other' && (
+              <p className="text-sm text-gray-600 mt-2">
+                場所や詳細を追加で入力できます（例：みつね地区、大賀郷の○○付近など）
+              </p>
+            )}
           </div>
 
           {/* リクエスト内容 */}
