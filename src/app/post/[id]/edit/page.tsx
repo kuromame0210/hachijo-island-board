@@ -22,16 +22,20 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
 
   // 災害支援投稿かどうかを判定
   const checkIfDisasterPost = (post: Post): boolean => {
-    const hasDisasterTag = post.tags && post.tags.includes('プライベート連絡先')
+    // 災害支援カテゴリのタグで判定
+    const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
+    const hasDisasterCategoryTag = post.tags && post.tags.some(tag => disasterCategories.includes(tag))
+    
+    // タイトルベースの判定（既存の投稿との互換性のため）
     const hasDisasterKeywords = post.title && (
-      post.title.includes('支援') || 
-      post.title.includes('災害') || 
-      post.title.includes('倒木') || 
-      post.title.includes('水を持ってきて') ||
+      post.title.includes('倒木を除去してほしい') || 
+      post.title.includes('水を持ってきて欲しい') ||
       post.title.includes('移動したい') ||
-      post.title.includes('買い出し')
+      post.title.includes('買い出しをお願いしたい') ||
+      (post.title.includes('支援') || post.title.includes('災害'))
     )
-    return Boolean(hasDisasterTag || hasDisasterKeywords)
+    
+    return Boolean(hasDisasterCategoryTag || hasDisasterKeywords)
   }
 
   useEffect(() => {

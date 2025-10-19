@@ -240,8 +240,16 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
         {/* 災害支援投稿の場合は連絡先セクション全体を非表示 */}
         {(() => {
-          // より確実な判定のため、複数の条件をチェック
+          // 災害支援カテゴリのタグで判定
+          const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
+          const hasDisasterCategoryTag = post.tags && post.tags.some(tag => disasterCategories.includes(tag))
+          
+          // タイトルベースの判定（既存の投稿との互換性のため）
           const hasDisasterKeywords = post.title && (
+            post.title.includes('倒木を除去してほしい') || 
+            post.title.includes('水を持ってきて欲しい') ||
+            post.title.includes('移動したい') ||
+            post.title.includes('買い出しをお願いしたい') ||
             post.title.includes('支援') || 
             post.title.includes('災害') || 
             post.title.includes('リクエスト') || 
@@ -251,19 +259,17 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
             post.title.includes('テスト') // テスト用に追加
           );
           
-          const hasPrivateContactTag = post.tags && Array.isArray(post.tags) && post.tags.includes('プライベート連絡先');
-          
           // 特定の投稿IDでも判定（テスト用）
           const isSpecificDisasterPost = post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d';
           
-          const isDisasterPost = hasPrivateContactTag || hasDisasterKeywords || isSpecificDisasterPost;
+          const isDisasterPost = hasDisasterCategoryTag || hasDisasterKeywords || isSpecificDisasterPost;
           
           console.log('Contact visibility check:', {
             title: post.title,
             category: post.category,
             tags: post.tags,
+            hasDisasterCategoryTag: hasDisasterCategoryTag,
             hasDisasterKeywords: hasDisasterKeywords,
-            hasPrivateContactTag: hasPrivateContactTag,
             isDisasterPost: isDisasterPost,
             showContact: !isDisasterPost
           });

@@ -113,8 +113,8 @@ export default function NewDisasterPost() {
         image_url: imageUrls.length > 0 ? imageUrls[0] : null,
         images: imageUrls,
         status: 'active',
-        // 災害支援投稿の識別用タグ（選択されたカテゴリも追加）
-        tags: ['災害支援', '支援要請', 'プライベート連絡先', formData.supportCategory]
+        // 災害支援投稿の識別は選択されたカテゴリをタグに保存
+        tags: [formData.supportCategory]
       }
 
       // 既存テーブルに災害支援要請として保存

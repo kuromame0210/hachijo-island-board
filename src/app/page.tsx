@@ -274,12 +274,20 @@ export default function HomePage() {
                             {post.title}
                           </h3>
 {/* 報酬表示（災害支援投稿の場合は非表示） */}
-                          {!((post.tags && post.tags.includes('プライベート連絡先')) || 
-                             (post.category === 'other' && post.title && 
-                              (post.title.includes('支援') || post.title.includes('災害') || post.title.includes('リクエスト') || 
-                               post.title.includes('ボランティア') || post.title.includes('台風') || post.title.includes('みつね') || 
-                               post.title.includes('テスト'))) || 
-                             post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d') && (
+                          {!(() => {
+                            const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
+                            const hasDisasterCategoryTag = post.tags && post.tags.some(tag => disasterCategories.includes(tag))
+                            const hasDisasterKeywords = post.title && (
+                              post.title.includes('倒木を除去してほしい') || 
+                              post.title.includes('水を持ってきて欲しい') ||
+                              post.title.includes('移動したい') ||
+                              post.title.includes('買い出しをお願いしたい') ||
+                              post.title.includes('支援') || post.title.includes('災害') || post.title.includes('リクエスト') || 
+                              post.title.includes('ボランティア') || post.title.includes('台風') || post.title.includes('みつね') || 
+                              post.title.includes('テスト')
+                            )
+                            return hasDisasterCategoryTag || hasDisasterKeywords || post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d'
+                          })() && (
                             post.reward_type === 'non_money' ? (
                               <span className="font-bold text-base text-green-600 flex-shrink-0">
                                 {post.reward_details || '非金銭報酬'}
@@ -400,12 +408,20 @@ export default function HomePage() {
                         {getCategoryLabel(post.category as CategoryKey)}
                       </Badge>
 {/* 報酬表示（災害支援投稿の場合は非表示） */}
-                      {!((post.tags && post.tags.includes('プライベート連絡先')) || 
-                         (post.category === 'other' && post.title && 
-                          (post.title.includes('支援') || post.title.includes('災害') || post.title.includes('リクエスト') || 
-                           post.title.includes('ボランティア') || post.title.includes('台風') || post.title.includes('みつね') || 
-                           post.title.includes('テスト'))) || 
-                         post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d') && (
+                      {!(() => {
+                        const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
+                        const hasDisasterCategoryTag = post.tags && post.tags.some(tag => disasterCategories.includes(tag))
+                        const hasDisasterKeywords = post.title && (
+                          post.title.includes('倒木を除去してほしい') || 
+                          post.title.includes('水を持ってきて欲しい') ||
+                          post.title.includes('移動したい') ||
+                          post.title.includes('買い出しをお願いしたい') ||
+                          post.title.includes('支援') || post.title.includes('災害') || post.title.includes('リクエスト') || 
+                          post.title.includes('ボランティア') || post.title.includes('台風') || post.title.includes('みつね') || 
+                          post.title.includes('テスト')
+                        )
+                        return hasDisasterCategoryTag || hasDisasterKeywords || post.id === 'f69879ae-e607-4189-85b9-06a8d9b3061d'
+                      })() && (
                         post.reward_type === 'non_money' ? (
                           <span className="font-bold text-sm text-green-600 max-w-24 truncate">
                             {post.reward_details || '非金銭報酬'}
