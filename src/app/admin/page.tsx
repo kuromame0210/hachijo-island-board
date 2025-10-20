@@ -148,18 +148,11 @@ export default function AdminPage() {
     }
   }
 
-  // 投稿の表示/非表示切り替え
+  // 投稿の表示/非表示切り替え（API経由）
   const togglePostStatus = async (postId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'hidden' : 'active'
     const actionText = newStatus === 'hidden' ? '非表示' : '表示'
     const currentText = currentStatus === 'active' ? '公開中' : '非表示'
-    
-    console.log('🔧 DEBUG: ステータス変更開始')
-    console.log('  - Post ID:', postId)
-    console.log('  - Current Status:', currentStatus)
-    console.log('  - New Status:', newStatus)
-    console.log('  - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('  - Has Anon Key:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
     // 確認ダイアログ
     const confirmed = confirm(
@@ -170,46 +163,25 @@ export default function AdminPage() {
     )
     
     if (!confirmed) {
-      console.log('🔧 DEBUG: ユーザーがキャンセル')
       return
     }
 
     try {
-      console.log('🔧 DEBUG: Supabase更新リクエスト送信')
-      const updateData = { 
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      }
-      console.log('  - Update data:', updateData)
-      
-      const { data, error, count } = await supabase
-        .from('hachijo_post_board')
-        .update(updateData)
-        .eq('id', postId)
-        .select() // 更新されたデータを取得
+      // API経由でステータス更新（編集機能と同じパターン）
+      const response = await fetch(`/api/posts/${postId}/toggle-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
 
-      console.log('🔧 DEBUG: Supabase応答')
-      console.log('  - Error:', error)
-      console.log('  - Data:', data)
-      console.log('  - Count:', count)
-      console.log('  - Updated records:', data?.length || 0)
-
-      if (error) {
-        console.error('🔧 DEBUG: Supabaseエラー詳細:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        })
-        throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'ステータス更新に失敗しました')
       }
 
-      if (!data || data.length === 0) {
-        console.error('🔧 DEBUG: 更新対象が見つからない')
-        throw new Error('更新対象の投稿が見つかりません')
-      }
-
-      console.log('🔧 DEBUG: 更新成功')
+      const result = await response.json()
       
       // ローカル状態を更新
       setPosts(posts.map(post => 
@@ -221,7 +193,6 @@ export default function AdminPage() {
       // 成功メッセージ
       alert(`投稿を${actionText}に変更しました`)
     } catch (error) {
-      console.error('🔧 DEBUG: キャッチされたエラー:', error)
       console.error('ステータス更新エラー:', error)
       alert('ステータスの更新に失敗しました')
     }
