@@ -31,13 +31,17 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const body = await request.json()
-    const { status } = body
+
+    // URLパラメータからステータスを取得
+    const searchParams = request.nextUrl.searchParams
+    const status = searchParams.get('status')
+
+    console.log('📥 Received status from URL:', status)
 
     // バリデーション
     if (!status || !['active', 'hidden'].includes(status)) {
       return NextResponse.json(
-        { error: 'Invalid status value' },
+        { error: 'Invalid status value. Must be "active" or "hidden"' },
         { status: 400 }
       )
     }

@@ -167,13 +167,12 @@ export default function AdminPage() {
     }
 
     try {
-      // API経由でステータス更新（編集機能と同じパターン）
-      const response = await fetch(`/api/posts/${postId}/toggle-status`, {
+      // API経由でステータス更新（URLパラメータ経由）
+      const response = await fetch(`/api/posts/${postId}/toggle-status?status=${newStatus}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus })
+        }
       })
 
       if (!response.ok) {
