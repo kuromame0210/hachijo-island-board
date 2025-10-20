@@ -29,12 +29,24 @@ export default function NewDisasterPost() {
     { id: 'other', label: 'その他' }
   ]
 
+  // 八丈島の地区
+  const districts = [
+    { id: 'okago', label: '大賀郷', kana: 'おおかごう' },
+    { id: 'mitsune', label: '三根', kana: 'みつね' },
+    { id: 'kashitate', label: '樫立', kana: 'かしたて' },
+    { id: 'nakanogo', label: '中之郷', kana: 'なかのごう' },
+    { id: 'sueyoshi', label: '末吉', kana: 'すえよし' }
+  ]
+
   // フォーム状態（シンプル化）
   const [formData, setFormData] = useState({
     supportCategory: '',    // 支援カテゴリ
     description: '',       // リクエスト内容詳細
-    location_detail: '',   // 場所
-    contact: '',          // 連絡先
+    district: '',          // 地区
+    location_detail: '',   // 詳細な場所
+    name: '',             // 氏名
+    phone: '',            // 電話番号
+    email: '',            // メールアドレス
     images: [] as string[] // 被害状況の画像
   })
 
@@ -94,6 +106,13 @@ export default function NewDisasterPost() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    // 地区選択のバリデーション
+    if (!formData.district) {
+      alert('地区を選択してください')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -104,12 +123,22 @@ export default function NewDisasterPost() {
       const selectedCategory = supportCategories.find(cat => cat.id === formData.supportCategory)
       const finalTitle = selectedCategory ? selectedCategory.label : '支援要請'
 
+      // 連絡先をフォーマット
+      const contactText = formData.email
+        ? `氏名: ${formData.name}\n電話: ${formData.phone}\nメール: ${formData.email}`
+        : `氏名: ${formData.name}\n電話: ${formData.phone}`
+
+      // 場所情報をフォーマット
+      const locationText = formData.location_detail
+        ? `【場所】${formData.district} - ${formData.location_detail}\n\n${formData.description}`
+        : `【場所】${formData.district}\n\n${formData.description}`
+
       // 投稿データを準備
       const postData = {
         title: finalTitle,
-        description: formData.description,
+        description: locationText,
         category: 'other', // 一時的にotherカテゴリを使用（DBの制約更新後にdisaster_supportに変更）
-        contact: formData.contact,
+        contact: contactText,
         image_url: imageUrls.length > 0 ? imageUrls[0] : null,
         images: imageUrls,
         status: 'active',
@@ -209,18 +238,42 @@ export default function NewDisasterPost() {
             )}
           </div>
 
-          {/* 場所 */}
+          {/* 地区選択 */}
+          <div className="mb-8">
+            <label className="block text-lg font-medium text-gray-800 mb-4">
+              地区を選択してください <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {districts.map((district) => (
+                <button
+                  key={district.id}
+                  type="button"
+                  onClick={() => setFormData(prev => ({...prev, district: district.label}))}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    formData.district === district.label
+                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                      : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
+                  }`}
+                >
+                  <div className="font-bold text-lg">{district.label}</div>
+                  <div className="text-sm text-gray-600">{district.kana}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 詳細な場所 */}
           <div className="mb-8">
             <label className="block text-lg font-medium text-gray-800 mb-3">
-              場所 <span className="text-red-500">*</span>
+              詳細な場所（任意）
             </label>
             <Input
               value={formData.location_detail}
               onChange={(e) => setFormData(prev => ({...prev, location_detail: e.target.value}))}
-              placeholder="例：三根地区、坂上地区○○付近、目印となる建物など"
+              placeholder="例：○○商店の近く、○○公園付近など"
               className="text-lg"
-              required
             />
+            <p className="text-sm text-gray-500 mt-2">※ 目印となる建物や場所を入力すると、より正確な支援ができます</p>
           </div>
 
           {/* 画像アップロード */}
@@ -305,25 +358,59 @@ export default function NewDisasterPost() {
             </div>
           </div>
 
-          {/* 連絡先 */}
+          {/* 連絡先情報 */}
           <div className="border-t border-gray-300 pt-8 mb-8">
-            <label className="block text-lg font-medium text-gray-800 mb-3">
-              連絡先 <span className="text-red-500">*</span>
-            </label>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">連絡先情報</h3>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-green-700 font-medium">
                 🔒 プライバシー保護：連絡先は一般公開されません<br/>
                 社協ボランティアチーム（管理者）のみが閲覧し、直接ご連絡いたします
               </p>
             </div>
-            <Textarea
-              value={formData.contact}
-              onChange={(e) => setFormData(prev => ({...prev, contact: e.target.value}))}
-              placeholder="電話番号、メールアドレス、SNSアカウントなど"
-              className="bg-blue-50 border-blue-200 font-mono text-lg"
-              rows={3}
-              required
-            />
+
+            {/* 氏名 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                氏名 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                placeholder="例: 田中太郎"
+                className="bg-blue-50 border-blue-200 text-lg"
+                required
+              />
+            </div>
+
+            {/* 電話番号 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                電話番号 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                placeholder="090-1234-5678"
+                className="bg-blue-50 border-blue-200 font-mono text-lg"
+                required
+              />
+            </div>
+
+            {/* メールアドレス */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                メールアドレス（任意）
+              </label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                placeholder="example@example.com"
+                className="bg-blue-50 border-blue-200 font-mono text-lg"
+              />
+            </div>
           </div>
 
           {/* 位置情報の状況表示 */}

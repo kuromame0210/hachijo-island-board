@@ -23,6 +23,15 @@ export default function NewPost() {
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost, isCurrentlyInIsland, hasRecentIslandAccess, lastIslandAccess } = useLocationAccess()
 
+  // 八丈島の地区
+  const districts = [
+    { id: 'okago', label: '大賀郷', kana: 'おおかごう' },
+    { id: 'mitsune', label: '三根', kana: 'みつね' },
+    { id: 'kashitate', label: '樫立', kana: 'かしたて' },
+    { id: 'nakanogo', label: '中之郷', kana: 'なかのごう' },
+    { id: 'sueyoshi', label: '末吉', kana: 'すえよし' }
+  ]
+
   // フォーム状態
   const [formData, setFormData] = useState({
     title: '',
@@ -34,7 +43,11 @@ export default function NewPost() {
     work_date: '',
     requirements: '',
     conditions: '',
-    contact: '',
+    name: '',
+    phone: '',
+    email: '',
+    district: '',
+    location_detail: '',
     map_link: '',
     iframe_embed: '',
     tags: '',
@@ -106,13 +119,18 @@ export default function NewPost() {
       // タグの処理（カンマ区切りの文字列を配列に変換）
       const tagsArray = formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
 
+      // 連絡先をフォーマット
+      const contactText = formData.email
+        ? `氏名: ${formData.name}\n電話: ${formData.phone}\nメール: ${formData.email}`
+        : `氏名: ${formData.name}\n電話: ${formData.phone}`
+
       // 投稿を作成
       const { error } = await supabase.from('hachijo_post_board').insert({
         title: formData.title,
         description: formData.description,
         category: formData.category || 'other',
         price: formData.price ? Number(formData.price) : null,
-        contact: formData.contact,
+        contact: contactText,
         images: imageUrls,
         image_url: imageUrls.length > 0 ? imageUrls[0] : null,
         status: 'active',  // 新規投稿はactiveステータス
@@ -367,44 +385,94 @@ export default function NewPost() {
               </div>
             </div>
 
-            {/* 地図情報 */}
-            <div className="mb-8">
-              <h4 className="font-semibold text-gray-800 mb-4">地図情報</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Google マップリンク
-                  </label>
-                  <Input
-                    value={formData.map_link}
-                    onChange={(e) => setFormData(prev => ({...prev, map_link: e.target.value}))}
-                    placeholder="https://maps.google.com/..."
-                  />
+            {/* 場所情報 */}
+            <div className="border-t border-gray-300 pt-6 mb-8">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">場所情報（任意）</h3>
+
+              {/* 地区選択 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  地区
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {districts.map((district) => (
+                    <button
+                      key={district.id}
+                      type="button"
+                      onClick={() => setFormData(prev => ({...prev, district: district.label}))}
+                      className={`p-3 rounded-lg border-2 transition-all text-left ${
+                        formData.district === district.label
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-300 bg-white hover:border-blue-300 hover:bg-blue-50'
+                      }`}
+                    >
+                      <div className="font-bold text-base">{district.label}</div>
+                      <div className="text-xs text-gray-600">{district.kana}</div>
+                    </button>
+                  ))}
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    iframe埋め込みコード
-                  </label>
-                  <Textarea
-                    value={formData.iframe_embed}
-                    onChange={(e) => setFormData(prev => ({...prev, iframe_embed: e.target.value}))}
-                    placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
-                    rows={4}
-                  />
-                </div>
+                {formData.district && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({...prev, district: ''}))}
+                    className="mt-2 text-sm text-gray-600 hover:text-gray-800 underline"
+                  >
+                    選択を解除
+                  </button>
+                )}
               </div>
-              
-              {/* プレビュー */}
-              {(formData.map_link || formData.iframe_embed) && (
-                <div className="mt-4">
-                  <GoogleMapEmbed 
-                    mapLink={formData.map_link} 
-                    iframeEmbed={formData.iframe_embed}
-                    title="投稿の場所" 
-                  />
+
+              {/* 詳細な場所 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  詳細な場所
+                </label>
+                <Input
+                  value={formData.location_detail}
+                  onChange={(e) => setFormData(prev => ({...prev, location_detail: e.target.value}))}
+                  placeholder="例：○○商店の近く、○○公園付近など"
+                />
+              </div>
+
+              {/* 地図情報 */}
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-3">地図リンク（任意）</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Google マップリンク
+                    </label>
+                    <Input
+                      value={formData.map_link}
+                      onChange={(e) => setFormData(prev => ({...prev, map_link: e.target.value}))}
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      iframe埋め込みコード
+                    </label>
+                    <Textarea
+                      value={formData.iframe_embed}
+                      onChange={(e) => setFormData(prev => ({...prev, iframe_embed: e.target.value}))}
+                      placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
+                      rows={4}
+                    />
+                  </div>
                 </div>
-              )}
+
+                {/* プレビュー */}
+                {(formData.map_link || formData.iframe_embed) && (
+                  <div className="mt-4">
+                    <GoogleMapEmbed
+                      mapLink={formData.map_link}
+                      iframeEmbed={formData.iframe_embed}
+                      title="投稿の場所"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* タグ */}
@@ -434,19 +502,53 @@ export default function NewPost() {
               </label>
             </div>
 
-            {/* 連絡先 */}
+            {/* 連絡先情報 */}
             <div className="border-t border-gray-300 pt-6 mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                連絡先 <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                value={formData.contact}
-                onChange={(e) => setFormData(prev => ({...prev, contact: e.target.value}))}
-                placeholder="電話番号、メールアドレス、SNSアカウントなど"
-                className="bg-blue-50 border-blue-200 font-mono"
-                rows={3}
-                required
-              />
+              <h3 className="text-sm font-medium text-gray-700 mb-4">連絡先情報</h3>
+
+              {/* 氏名 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  氏名 <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                  placeholder="例: 田中太郎"
+                  className="bg-blue-50 border-blue-200"
+                  required
+                />
+              </div>
+
+              {/* 電話番号 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  電話番号 <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                  placeholder="090-1234-5678"
+                  className="bg-blue-50 border-blue-200 font-mono"
+                  required
+                />
+              </div>
+
+              {/* メールアドレス */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  メールアドレス（任意）
+                </label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                  placeholder="example@example.com"
+                  className="bg-blue-50 border-blue-200 font-mono"
+                />
+              </div>
             </div>
 
             {/* 必須項目の注釈 */}
@@ -455,7 +557,8 @@ export default function NewPost() {
               <ul className="text-sm text-yellow-700 space-y-1">
                 <li>• タイトル</li>
                 <li>• 説明</li>
-                <li>• 連絡先</li>
+                <li>• 氏名</li>
+                <li>• 電話番号</li>
               </ul>
               <p className="text-xs text-yellow-600 mt-2">※ カテゴリーは任意です（未選択時は「その他」になります）</p>
             </div>
