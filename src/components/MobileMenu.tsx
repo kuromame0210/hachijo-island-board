@@ -121,8 +121,9 @@ export default function MobileMenu() {
                 )}
               </nav>
 
-              {/* カテゴリ別リンク */}
+              {/* カテゴリ別リンク - 一時非表示 */}
               {/* カテゴリーリンクを追加/変更したい場合は CATEGORY_MANAGEMENT.md を参照 */}
+              {/*
               <div className="mt-8">
                 <h3 className="text-sm font-semibold text-gray-500 mb-3 px-4">カテゴリ</h3>
                 <div className="space-y-1">
@@ -149,6 +150,7 @@ export default function MobileMenu() {
                   </Link>
                 </div>
               </div>
+              */}
 
             </div>
           </div>
