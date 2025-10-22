@@ -49,7 +49,7 @@ export default function MobileMenu() {
             <div className="p-6">
               {/* ヘッダー */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">メニュー</h2>
+                <h2 className="text-base font-bold text-gray-900">八丈島あすなろボランティア窓口</h2>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 text-gray-500 hover:text-gray-700"

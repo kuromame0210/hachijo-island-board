@@ -31,8 +31,10 @@ export default function RootLayout({
                 <span className="hidden lg:block text-base lg:text-lg font-bold">八丈島あすなろボランティア窓口</span>
                 {/* 中画面: 短縮版 */}
                 <span className="hidden md:block lg:hidden text-sm md:text-base font-bold">八丈島ボランティア窓口</span>
-                {/* 小画面: 最短版 */}
-                <span className="block md:hidden text-xs font-bold">八丈島窓口</span>
+                {/* 小画面: 改行して表示 */}
+                <span className="block md:hidden text-xs font-bold leading-tight">
+                  八丈島あすなろ<br />ボランティア窓口
+                </span>
               </div>
             </Link>
 
