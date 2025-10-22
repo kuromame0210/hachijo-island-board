@@ -187,12 +187,12 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         {/* 画像ギャラリー */}
         {images.length > 0 && (
           <div className="mb-8">
-            <div className="mb-4 relative h-80 bg-slate-100 rounded-lg overflow-hidden">
+            <div className="mb-4 relative w-full h-96 max-h-[600px] bg-slate-100 rounded-lg overflow-hidden">
               <Image
                 src={images[selectedImageIndex]}
                 alt={`${post.title} - 画像 ${selectedImageIndex + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 75vw"
                 priority={selectedImageIndex === 0}
                 placeholder="blur"
@@ -205,7 +205,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
                       selectedImageIndex === index ? 'border-blue-600' : 'border-gray-300'
                     }`}
                   >
