@@ -22,12 +22,17 @@ export default function RootLayout({
       <body className={`${inter.className} bg-slate-50`}>
         <header className="bg-gradient-to-r from-slate-800 to-slate-700 border-b-4 border-blue-600 shadow-lg">
           <div className="container mx-auto px-4 h-18 flex items-center justify-between">
-            <Link href="/" className="text-xl font-bold text-white flex items-center gap-3">
-              <div className="bg-white p-2 rounded-full">
-                <span className="text-2xl text-slate-800">八</span>
+            <Link href="/" className="text-xl font-bold text-white flex items-center gap-2 md:gap-3">
+              <div className="bg-white p-1.5 md:p-2 rounded-full">
+                <span className="text-xl md:text-2xl text-slate-800">八</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold">八丈島あすなろボランティア窓口</span>
+                {/* 大画面: フルタイトル */}
+                <span className="hidden lg:block text-base lg:text-lg font-bold">八丈島あすなろボランティア窓口</span>
+                {/* 中画面: 短縮版 */}
+                <span className="hidden md:block lg:hidden text-sm md:text-base font-bold">八丈島ボランティア窓口</span>
+                {/* 小画面: 最短版 */}
+                <span className="block md:hidden text-xs font-bold">八丈島窓口</span>
               </div>
             </Link>
 
@@ -56,9 +61,12 @@ export default function RootLayout({
               */}
               <Link
                 href="/disaster/new"
-                className="px-4 py-2.5 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors shadow-md"
+                className="px-3 lg:px-4 py-2.5 text-xs lg:text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors shadow-md whitespace-nowrap"
               >
-🆘 リクエスト機能
+                {/* 大画面: フルテキスト */}
+                <span className="hidden lg:inline">🆘 リクエスト機能</span>
+                {/* 中画面: 短縮版 */}
+                <span className="inline lg:hidden">🆘 要請</span>
               </Link>
             </nav>
 
