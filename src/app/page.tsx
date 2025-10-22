@@ -295,7 +295,7 @@ export default function HomePage() {
                         {(post.images && post.images.length > 0) || post.image_url ? (
                           <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-slate-300 shadow-sm relative">
                             <Image
-                              src={post.images && post.images.length > 0 ? post.images[0] : post.image_url}
+                              src={post.images && post.images.length > 0 ? post.images[0] : (post.image_url || '')}
                               alt={post.title}
                               fill
                               className="object-cover"
@@ -427,7 +427,7 @@ export default function HomePage() {
                   {(post.images && post.images.length > 0) || post.image_url ? (
                     <div className="h-72 bg-slate-200 overflow-hidden relative">
                       <Image
-                        src={post.images && post.images.length > 0 ? post.images[0] : post.image_url}
+                        src={post.images && post.images.length > 0 ? post.images[0] : (post.image_url || '')}
                         alt={post.title}
                         fill
                         className="object-cover"
