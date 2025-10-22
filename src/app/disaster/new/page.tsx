@@ -297,15 +297,16 @@ export default function NewDisasterPost() {
           {/* 詳細な場所 */}
           <div className="mb-8">
             <label className="block text-lg font-medium text-gray-800 mb-3">
-              詳細な場所（任意）
+              番地or目印になるもの <span className="text-red-500">*</span>
             </label>
             <Input
               value={formData.location_detail}
               onChange={(e) => setFormData(prev => ({...prev, location_detail: e.target.value}))}
-              placeholder="例：○○商店の近く、○○公園付近など"
+              placeholder="例：○○商店の近く、○○公園付近、○○番地など"
               className="text-lg"
+              required
             />
-            <p className="text-sm text-gray-500 mt-2">※ 目印となる建物や場所を入力すると、より正確な支援ができます</p>
+            <p className="text-sm text-gray-500 mt-2">※ 正確な支援を行うため、番地や目印となる建物・場所を必ずご入力ください</p>
           </div>
 
           {/* 画像アップロード */}
