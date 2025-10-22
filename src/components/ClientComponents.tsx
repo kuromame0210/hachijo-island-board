@@ -25,9 +25,9 @@ export default function ClientComponents() {
       {isIslander && (
         <a
           href="/disaster/new"
-          className="md:hidden bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors duration-200 text-xs"
+          className="md:hidden bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 text-sm font-bold shadow-lg"
         >
-          🆘リクエスト
+          ボランティア要請
         </a>
       )}
       <MobileMenu />

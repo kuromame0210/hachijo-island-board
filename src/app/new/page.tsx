@@ -252,7 +252,7 @@ export default function NewPost() {
                   </Select>
                 </div>
                 <div className="text-sm text-gray-500">
-                  新規投稿
+                  ボランティア要請
                 </div>
               </div>
 

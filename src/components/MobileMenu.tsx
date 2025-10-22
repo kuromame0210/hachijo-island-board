@@ -109,14 +109,14 @@ export default function MobileMenu() {
                 )}
                 */}
                 
-                {/* リクエスト機能リンク（投稿権限がある場合のみ） */}
+                {/* ボランティア要請リンク（投稿権限がある場合のみ） */}
                 {canPost && (
                   <Link
                     href="/disaster/new"
-                    className="flex items-center gap-3 px-4 py-3 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-bold shadow-lg"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span className="font-medium">🆘 リクエスト機能</span>
+                    <span className="font-bold">ボランティア要請</span>
                   </Link>
                 )}
               </nav>

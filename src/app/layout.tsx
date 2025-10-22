@@ -8,8 +8,8 @@ import ClientComponents from "@/components/ClientComponents";
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "八丈掲示板",
-  description: "八丈島の地域掲示板",
+  title: "八丈島あすなろボランティア窓口",
+  description: "八丈島あすなろボランティア窓口",
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
                 <span className="text-2xl text-slate-800">八</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold">八丈掲示板</span>
+                <span className="text-lg font-bold">八丈島あすなろボランティア窓口</span>
               </div>
             </Link>
 
@@ -80,11 +80,11 @@ export default function RootLayout({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                    八丈掲示板
+                    八丈島あすなろボランティア窓口
                   </h3>
                   <p className="text-sm text-slate-400 leading-relaxed">
                     八丈島<br/>
-                    情報交換プラットフォーム
+                    ボランティア情報窓口
                   </p>
                 </div>
                 <div>
@@ -99,10 +99,10 @@ export default function RootLayout({
               </div>
               <div className="border-t border-slate-600 pt-6 text-center">
                 <p className="text-sm text-slate-400">
-                  © 2025 八丈島地域コミュニティ掲示板
+                  © 2025 八丈島あすなろボランティア窓口
                 </p>
                 <p className="text-xs text-slate-500 mt-2">
-                  本サービスは地域コミュニティの発展を目的としています
+                  本サービスは地域コミュニティのボランティア活動を支援します
                 </p>
               </div>
             </div>
