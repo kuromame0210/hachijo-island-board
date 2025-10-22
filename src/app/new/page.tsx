@@ -13,6 +13,7 @@ import { useLocation } from '@/hooks/useLocation'
 import { useLocationAccess } from '@/hooks/useLocationAccess'
 import { getCategoriesForForm } from '@/lib/categories'
 import GoogleMapEmbed from '@/components/GoogleMapEmbed'
+import { compressMultipleImages } from '@/lib/imageCompression'
 
 export default function NewPost() {
   const router = useRouter()
@@ -20,6 +21,9 @@ export default function NewPost() {
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [compressing, setCompressing] = useState(false)
+  const [compressionError, setCompressionError] = useState<string | null>(null)
+  const [compressionProgress, setCompressionProgress] = useState<{ completed: number; total: number } | null>(null)
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost, isCurrentlyInIsland, hasRecentIslandAccess, lastIslandAccess } = useLocationAccess()
 
@@ -54,7 +58,7 @@ export default function NewPost() {
     age_friendly: false
   })
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     const newImages = files.slice(0, 5 - selectedImages.length)
 
@@ -63,16 +67,44 @@ export default function NewPost() {
       return
     }
 
-    setSelectedImages(prev => [...prev, ...newImages])
+    if (newImages.length === 0) return
 
-    // プレビューを作成
-    newImages.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagePreviews(prev => [...prev, e.target?.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
+    setCompressing(true)
+    setCompressionError(null)
+    setCompressionProgress({ completed: 0, total: newImages.length })
+
+    try {
+      // 画像を圧縮
+      const compressedFiles = await compressMultipleImages(
+        newImages,
+        {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          preserveExif: false
+        },
+        (completed, total) => {
+          setCompressionProgress({ completed, total })
+        }
+      )
+
+      setSelectedImages(prev => [...prev, ...compressedFiles])
+
+      // 圧縮後の画像でプレビューを作成
+      compressedFiles.forEach(file => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setImagePreviews(prev => [...prev, e.target?.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
+    } catch (error) {
+      console.error('画像圧縮エラー:', error)
+      setCompressionError(error instanceof Error ? error.message : '画像の圧縮に失敗しました')
+    } finally {
+      setCompressing(false)
+      setCompressionProgress(null)
+    }
   }
 
   const removeImage = (index: number) => {
@@ -267,6 +299,7 @@ export default function NewPost() {
                     multiple
                     onChange={handleImageSelect}
                     className="mb-4"
+                    disabled={compressing}
                   />
                 ) : (
                   /* 画像がある場合：追加ボタン */
@@ -274,7 +307,7 @@ export default function NewPost() {
                     <span className="text-sm text-gray-600">
                       {selectedImages.length}/5枚選択済み
                     </span>
-                    {selectedImages.length < 5 && (
+                    {selectedImages.length < 5 && !compressing && (
                       <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -289,6 +322,25 @@ export default function NewPost() {
                         />
                       </label>
                     )}
+                  </div>
+                )}
+
+                {/* 圧縮中の表示 */}
+                {compressing && (
+                  <div className="text-center py-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-blue-600 font-medium mb-2">📸 画像を圧縮中...</div>
+                    {compressionProgress && (
+                      <div className="text-sm text-blue-600">
+                        {compressionProgress.completed}/{compressionProgress.total}枚完了
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* エラー表示 */}
+                {compressionError && (
+                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                    ❌ {compressionError}
                   </div>
                 )}
 

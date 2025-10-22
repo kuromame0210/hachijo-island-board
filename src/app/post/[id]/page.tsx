@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +10,7 @@ import GoogleMapEmbed from '@/components/GoogleMapEmbed'
 import CommentSection from '@/components/CommentSection'
 import { Post } from '@/types'
 import { useLocationAccess } from '@/hooks/useLocationAccess'
+import { BLUR_DATA_URL } from '@/utils/blurDataUrl'
 
 // ============================================================
 // デモ用広告データ（page.tsxと同期）
@@ -185,11 +187,16 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         {/* 画像ギャラリー */}
         {images.length > 0 && (
           <div className="mb-8">
-            <div className="mb-4">
-              <img
+            <div className="mb-4 relative h-80 bg-slate-100 rounded-lg overflow-hidden">
+              <Image
                 src={images[selectedImageIndex]}
                 alt={`${post.title} - 画像 ${selectedImageIndex + 1}`}
-                className="w-full h-80 object-cover rounded-lg"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 75vw"
+                priority={selectedImageIndex === 0}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
             </div>
             {images.length > 1 && (
@@ -202,10 +209,14 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
                       selectedImageIndex === index ? 'border-blue-600' : 'border-gray-300'
                     }`}
                   >
-                    <img
+                    <Image
                       src={image}
                       alt={`サムネイル ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
                     />
                   </button>
                 ))}

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import { useLocation } from '@/hooks/useLocation'
 import { SimpleAccessDenied } from '@/components/AccessDenied'
 import { Post } from '@/types'
 import InfoPortalLinks from '@/components/InfoPortalLinks'
+import { BLUR_DATA_URL } from '@/utils/blurDataUrl'
 
 // 広告はデータベースから投稿として取得するように変更
 
@@ -291,11 +293,15 @@ export default function HomePage() {
                       {/* 画像/アイコン */}
                       <div className="flex-shrink-0">
                         {(post.images && post.images.length > 0) || post.image_url ? (
-                          <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-slate-300 shadow-sm">
-                            <img
+                          <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-slate-300 shadow-sm relative">
+                            <Image
                               src={post.images && post.images.length > 0 ? post.images[0] : post.image_url}
                               alt={post.title}
-                              className="w-full h-full object-cover"
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                              placeholder="blur"
+                              blurDataURL={BLUR_DATA_URL}
                             />
                           </div>
                         ) : (
@@ -420,10 +426,15 @@ export default function HomePage() {
                 <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full border-2 border-slate-200 hover:border-slate-300 bg-white rounded-xl overflow-hidden">
                   {(post.images && post.images.length > 0) || post.image_url ? (
                     <div className="h-72 bg-slate-200 overflow-hidden relative">
-                      <img
+                      <Image
                         src={post.images && post.images.length > 0 ? post.images[0] : post.image_url}
                         alt={post.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={index < 3}
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
                       />
                       {post.images && post.images.length > 1 && (
                         <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm">

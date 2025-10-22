@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Post } from '@/types'
 import { useLocation } from '@/hooks/useLocation'
 import { useLocationAccess } from '@/hooks/useLocationAccess'
+import { compressMultipleImages } from '@/lib/imageCompression'
 
 export default function EditPost({ params }: { params: Promise<{ id: string }> }) {
   const [post, setPost] = useState<Post | null>(null)
@@ -24,6 +25,9 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   const [existingImages, setExistingImages] = useState<string[]>([])
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([])
+  const [compressing, setCompressing] = useState(false)
+  const [compressionError, setCompressionError] = useState<string | null>(null)
+  const [compressionProgress, setCompressionProgress] = useState<{ completed: number; total: number } | null>(null)
   
   const router = useRouter()
   const { locationResult, hasAskedPermission } = useLocation()
@@ -97,7 +101,7 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
   }, [params, router, hasAskedPermission, locationResult.status, canPost])
 
   // 画像選択処理
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     const totalImages = existingImages.length - imagesToDelete.length + selectedImages.length
     const newImages = files.slice(0, 5 - totalImages)
@@ -107,16 +111,44 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
       return
     }
 
-    setSelectedImages(prev => [...prev, ...newImages])
+    if (newImages.length === 0) return
 
-    // プレビューを作成
-    newImages.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagePreviews(prev => [...prev, e.target?.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
+    setCompressing(true)
+    setCompressionError(null)
+    setCompressionProgress({ completed: 0, total: newImages.length })
+
+    try {
+      // 画像を圧縮
+      const compressedFiles = await compressMultipleImages(
+        newImages,
+        {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          preserveExif: false
+        },
+        (completed, total) => {
+          setCompressionProgress({ completed, total })
+        }
+      )
+
+      setSelectedImages(prev => [...prev, ...compressedFiles])
+
+      // 圧縮後の画像でプレビューを作成
+      compressedFiles.forEach(file => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setImagePreviews(prev => [...prev, e.target?.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
+    } catch (error) {
+      console.error('画像圧縮エラー:', error)
+      setCompressionError(error instanceof Error ? error.message : '画像の圧縮に失敗しました')
+    } finally {
+      setCompressing(false)
+      setCompressionProgress(null)
+    }
   }
 
   // 新しい画像の削除
@@ -632,8 +664,27 @@ export default function EditPost({ params }: { params: Promise<{ id: string }> }
               </div>
             )}
 
+            {/* 圧縮中の表示 */}
+            {compressing && (
+              <div className="text-center py-4 bg-green-50 rounded-lg border border-green-200 mb-4">
+                <div className="text-green-600 font-medium mb-2">📸 画像を圧縮中...</div>
+                {compressionProgress && (
+                  <div className="text-sm text-green-600">
+                    {compressionProgress.completed}/{compressionProgress.total}枚完了
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* エラー表示 */}
+            {compressionError && (
+              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
+                ❌ {compressionError}
+              </div>
+            )}
+
             {/* 画像追加ボタン */}
-            {existingImages.length - imagesToDelete.length + selectedImages.length < 5 && (
+            {existingImages.length - imagesToDelete.length + selectedImages.length < 5 && !compressing && (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                 <label className="cursor-pointer">
                   <div className="text-gray-500 mb-2">
