@@ -13,10 +13,10 @@ import { BLUR_DATA_URL } from '@/utils/blurDataUrl'
 
 // 広告はデータベースから投稿として取得するように変更
 
-import { 
-  getCategoryIcon, 
+import {
+  getCategoryIcon,
   getCategoryLabel,
-  type CategoryKey 
+  type CategoryKey
 } from '@/lib/categories'
 
 // カテゴリーバッジ用の軽い色バリエーション

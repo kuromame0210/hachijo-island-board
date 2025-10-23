@@ -24,12 +24,11 @@ export default function NewDisasterPost() {
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost, isCurrentlyInIsland, hasRecentIslandAccess, lastIslandAccess } = useLocationAccess()
 
-  // 支援カテゴリの選択肢
+  // 支援カテゴリの選択肢（あすなろのお手伝い内容に準拠）
   const supportCategories = [
-    { id: 'tree_removal', label: '倒木を除去してほしい' },
-    { id: 'water_supply', label: '水を持ってきて欲しい' },
-    { id: 'transportation', label: '移動したい' },
-    { id: 'shopping', label: '買い出しをお願いしたい' },
+    { id: 'water_supply', label: '飲料水・生活用水の運搬' },
+    { id: 'cleaning', label: 'ご自宅の掃除、片付け' },
+    { id: 'furniture_disposal', label: '家具、ゴミ出しの搬出' },
     { id: 'other', label: 'その他' }
   ]
 
@@ -51,6 +50,10 @@ export default function NewDisasterPost() {
     name: '',             // 氏名
     phone: '',            // 電話番号
     email: '',            // メールアドレス
+    hasProxy: false,      // 代理人がいるかどうか
+    proxyName: '',        // 代理人氏名
+    proxyPhone: '',       // 代理人電話番号
+    proxyAddress: '',     // 代理人住所
     images: [] as string[] // 被害状況の画像
   })
 
@@ -156,9 +159,20 @@ export default function NewDisasterPost() {
       const finalTitle = selectedCategory ? selectedCategory.label : '支援要請'
 
       // 連絡先をフォーマット
-      const contactText = formData.email
-        ? `氏名: ${formData.name}\n電話: ${formData.phone}\nメール: ${formData.email}`
-        : `氏名: ${formData.name}\n電話: ${formData.phone}`
+      let contactText = ''
+
+      if (formData.hasProxy) {
+        // 代理人による投稿の場合
+        contactText = `【代理人情報】
+氏名: ${formData.proxyName}
+電話: ${formData.proxyPhone}
+住所: ${formData.proxyAddress}`
+      } else {
+        // 本人による投稿の場合
+        contactText = formData.email
+          ? `氏名: ${formData.name}\n電話: ${formData.phone}\nメール: ${formData.email}`
+          : `氏名: ${formData.name}\n電話: ${formData.phone}`
+      }
 
       // 場所情報をフォーマット
       const locationText = formData.location_detail
@@ -174,6 +188,15 @@ export default function NewDisasterPost() {
         image_url: imageUrls.length > 0 ? imageUrls[0] : null,
         images: imageUrls,
         status: 'active',
+        price: null, // 災害支援は無償
+        reward_type: 'free', // 無償・体験
+        reward_details: null,
+        work_date: null,
+        requirements: null,
+        conditions: null,
+        age_friendly: false,
+        map_link: null,
+        iframe_embed: null,
         // 災害支援投稿の識別は選択されたカテゴリをタグに保存
         tags: [formData.supportCategory]
       }
@@ -312,7 +335,7 @@ export default function NewDisasterPost() {
           {/* 画像アップロード */}
           <div className="mb-8">
             <label className="block text-lg font-medium text-gray-800 mb-3">
-              被害状況の画像（最大5枚）
+              状況の画像（最大5枚）
             </label>
             
             <div className="space-y-4">
@@ -353,7 +376,7 @@ export default function NewDisasterPost() {
               {/* 圧縮中の表示 */}
               {compressing && (
                 <div className="text-center py-4 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="text-orange-600 font-medium mb-2">📸 被害状況画像を圧縮中...</div>
+                  <div className="text-orange-600 font-medium mb-2">📸 画像を圧縮中...</div>
                   {compressionProgress && (
                     <div className="text-sm text-orange-600">
                       {compressionProgress.completed}/{compressionProgress.total}枚完了
@@ -421,49 +444,136 @@ export default function NewDisasterPost() {
               </p>
             </div>
 
-            {/* 氏名 */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                氏名 <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-                placeholder="例: 田中太郎"
-                className="bg-blue-50 border-blue-200 text-lg"
-                required
-              />
+            {/* 投稿者選択 */}
+            <div className="flex items-center gap-6 mb-6">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="posterSelf"
+                  name="posterType"
+                  checked={!formData.hasProxy}
+                  onChange={() => setFormData(prev => ({...prev, hasProxy: false}))}
+                  className="w-5 h-5 text-blue-600"
+                />
+                <label htmlFor="posterSelf" className="ml-2 text-base font-medium text-gray-800">
+                  👤 本人が投稿
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="posterProxy"
+                  name="posterType"
+                  checked={formData.hasProxy}
+                  onChange={() => setFormData(prev => ({...prev, hasProxy: true}))}
+                  className="w-5 h-5 text-purple-600"
+                />
+                <label htmlFor="posterProxy" className="ml-2 text-base font-medium text-gray-800">
+                  📝 代理人が投稿
+                </label>
+              </div>
             </div>
 
-            {/* 電話番号 */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                電話番号 <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
-                placeholder="090-1234-5678"
-                className="bg-blue-50 border-blue-200 font-mono text-lg"
-                required
-              />
-            </div>
+            {!formData.hasProxy ? (
+              /* 本人情報 */
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+                {/* 氏名 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    氏名 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                    placeholder="例: 田中太郎"
+                    className="bg-blue-50 border-blue-200 text-lg"
+                    required
+                  />
+                </div>
 
-            {/* メールアドレス */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                メールアドレス（任意）
-              </label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
-                placeholder="example@example.com"
-                className="bg-blue-50 border-blue-200 font-mono text-lg"
-              />
-            </div>
+                {/* 電話番号 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    電話番号 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                    placeholder="090-1234-5678"
+                    className="bg-blue-50 border-blue-200 font-mono text-lg"
+                    required
+                  />
+                </div>
+
+                {/* メールアドレス */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    メールアドレス（任意）
+                  </label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                    placeholder="example@example.com"
+                    className="bg-blue-50 border-blue-200 font-mono text-lg"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* 代理人情報 */
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 space-y-4">
+                <p className="text-sm text-purple-700 font-medium mb-4">
+                  ℹ️ 本人に代わって投稿する場合は、代理人の情報を入力してください
+                </p>
+
+                {/* 代理人氏名 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    代理人氏名 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.proxyName}
+                    onChange={(e) => setFormData(prev => ({...prev, proxyName: e.target.value}))}
+                    placeholder="例: 山田花子"
+                    className="bg-purple-50 border-purple-200 text-lg"
+                    required
+                  />
+                </div>
+
+                {/* 代理人電話番号 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    代理人電話番号 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="tel"
+                    value={formData.proxyPhone}
+                    onChange={(e) => setFormData(prev => ({...prev, proxyPhone: e.target.value}))}
+                    placeholder="080-9876-5432"
+                    className="bg-purple-50 border-purple-200 font-mono text-lg"
+                    required
+                  />
+                </div>
+
+                {/* 代理人住所 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    代理人住所 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.proxyAddress}
+                    onChange={(e) => setFormData(prev => ({...prev, proxyAddress: e.target.value}))}
+                    placeholder="例: 八丈町三根123-4"
+                    className="bg-purple-50 border-purple-200 text-lg"
+                    required
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 位置情報の状況表示 */}
