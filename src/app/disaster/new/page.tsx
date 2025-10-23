@@ -227,15 +227,27 @@ export default function NewDisasterPost() {
               <h1 className="text-3xl font-bold text-red-600 mb-2">支援リクエスト</h1>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 mb-2">台風22号・23号による被害について</h3>
-              <p className="text-sm text-blue-700 mb-3">
-                10月13日の台風23号に続き、八丈島は大きな被害を受けました。
-                社協ではボランティアを募集していますが、具体的な支援ニーズを把握するため、
-                この機能を通じて必要な支援内容をお知らせください。
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-semibold text-blue-800">台風22号・23号による被害について</h3>
+                <div className="group relative inline-block">
+                  <span className="text-blue-600 cursor-help text-lg">ℹ️</span>
+                  <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute z-10 w-80 p-4 bg-white border-2 border-blue-300 rounded-lg shadow-xl left-1/2 -translate-x-1/2 top-8">
+                    <div className="text-sm text-blue-700 mb-3 text-left">
+                      台風22/23号の影響により、八丈島は大きな被害を受けました。
+                      社協ではボランティアを募集していますが、具体的な支援ニーズを把握するため、
+                      この機能を通じて必要な支援内容をお知らせください。
+                    </div>
+                    <div className="text-sm text-blue-700 text-left">
+                      <strong>例：</strong>水が欲しい、がれきを捨ててほしい、屋根の修理が必要など<br/>
+                      社協ボランティアチームが情報を確認し、対応いたします。
+                    </div>
+                    {/* 三角形の矢印 */}
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 border-blue-300 transform rotate-45"></div>
+                  </div>
+                </div>
+              </div>
               <p className="text-sm text-blue-700">
-                <strong>例：</strong>水が欲しい、がれきを捨ててほしい、屋根の修理が必要など<br/>
-                社協ボランティアチームが情報を確認し、対応いたします。
+                🔒 連絡先は一般公開されません。社協ボランティアチーム（管理者）のみが閲覧します。
               </p>
             </div>
           </div>
