@@ -310,7 +310,7 @@ export default function HomePage() {
                           </div>
                         ) : (
                           <div className="w-12 h-12 bg-slate-100 rounded-md flex items-center justify-center border border-slate-300 shadow-sm">
-                            <span className="text-base">
+                            <span className="text-[11px] leading-none">
                               {getCategoryIcon(post.category as CategoryKey)}
                             </span>
                           </div>
@@ -377,19 +377,19 @@ export default function HomePage() {
                             </p>
                             {/* 作業日時の簡易表示 */}
                             {post.work_date && (
-                              <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded flex-shrink-0">
+                              <span className="inline-flex items-center justify-center w-4 h-4 text-[11px] leading-none text-blue-700 bg-blue-100 border border-blue-200 rounded flex-shrink-0">
                                 📅
                               </span>
                             )}
                             {/* 参加条件 */}
                             {post.requirements && (
-                              <span className="text-xs text-purple-600 bg-purple-50 px-1 rounded flex-shrink-0">
+                              <span className="inline-flex items-center justify-center w-4 h-4 text-[11px] leading-none text-purple-700 bg-purple-100 border border-purple-200 rounded flex-shrink-0">
                                 📋
                               </span>
                             )}
                             {/* 年少者可能フラグ */}
                             {post.age_friendly && (
-                              <span className="text-xs text-green-600 bg-green-50 px-1 rounded flex-shrink-0">
+                              <span className="inline-flex items-center justify-center w-4 h-4 text-[11px] leading-none text-green-700 bg-green-100 border border-green-200 rounded flex-shrink-0">
                                 👦
                               </span>
                             )}

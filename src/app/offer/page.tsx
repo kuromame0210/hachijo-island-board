@@ -106,7 +106,7 @@ export default function OfferListPage() {
                             </div>
                           ) : (
                             <div className="w-12 h-12 bg-slate-100 rounded-md flex items-center justify-center border border-slate-300 shadow-sm">
-                              <span className="text-base" aria-hidden>🎁</span>
+                              <span className="text-[11px] leading-none" aria-hidden>🎁</span>
                             </div>
                           )}
                         </div>
