@@ -287,12 +287,8 @@ export default function HomePage() {
         <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden">
           {filteredPosts.map((post, index) => {
             // 本文からエリア名を抽出（【場所】または【エリア】）
-            const extractArea = (text?: string): string | null => {
-              if (!text) return null
-              const m = text.match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
-              return m ? m[1] : null
-            }
-            const area = extractArea(post.description)
+            const m = (post.description || '').match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
+            const area = m ? m[1] : null
             return (
             <React.Fragment key={post.id}>
 

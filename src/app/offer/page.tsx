@@ -87,12 +87,8 @@ export default function OfferListPage() {
         viewMode === 'list' ? (
           <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden">
             {posts.map((post, index) => {
-              const extractArea = (text?: string): string | null => {
-                if (!text) return null
-                const m = text.match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
-                return m ? m[1] : null
-              }
-              const area = extractArea(post.description)
+              const m = (post.description || '').match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
+              const area = m ? m[1] : null
               const images = post.images && post.images.length > 0 ? post.images : (post.image_url ? [post.image_url] : [])
               const isLast = index === posts.length - 1
               const isGoods = (post.tags || []).includes('goods')
@@ -135,12 +131,8 @@ export default function OfferListPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {posts.map((post) => {
-              const extractArea = (text?: string): string | null => {
-                if (!text) return null
-                const m = text.match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
-                return m ? m[1] : null
-              }
-              const area = extractArea(post.description)
+              const m = (post.description || '').match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
+              const area = m ? m[1] : null
               const images = post.images && post.images.length > 0 ? post.images : (post.image_url ? [post.image_url] : [])
               const thumb = images[0]
               const isGoods = (post.tags || []).includes('goods')
