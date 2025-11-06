@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import LocationStatusBar from "@/components/LocationStatus";
 import ClientComponents from "@/components/ClientComponents";
+import MobileContextSwitcher from "@/components/MobileContextSwitcher";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -92,6 +93,8 @@ export default function RootLayout({
             </div>
           </div>
         </header>
+        {/* モバイル専用の小型切替ナビ */}
+        <MobileContextSwitcher />
         <main className="container mx-auto px-4 py-8">
           {children}
         </main>

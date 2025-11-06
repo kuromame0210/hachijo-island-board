@@ -223,36 +223,38 @@ export default function HomePage() {
         </div>
         */}
 
-        <div className="flex gap-4">
-          {/* 表示モード切り替え */}
-          <div className="flex gap-2 whitespace-nowrap">
-            <button
-              onClick={() => {
-                setViewMode('list')
-                localStorage.setItem('viewMode', 'list')
-              }}
-              className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
-                viewMode === 'list'
-                  ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
-                  : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-              }`}
-            >
-              📋 リスト
-            </button>
-            <button
-              onClick={() => {
-                setViewMode('grid')
-                localStorage.setItem('viewMode', 'grid')
-              }}
-              className={`px-5 py-3 rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm ${
-                viewMode === 'grid'
-                  ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
-                  : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-              }`}
-            >
-              ⊞ カード
-            </button>
-          </div>
+        <div className="flex gap-2 items-center">
+          {/* 表示モード切り替え（小型・アイコンのみ） */}
+          <button
+            onClick={() => {
+              setViewMode('list')
+              localStorage.setItem('viewMode', 'list')
+            }}
+            title="リスト表示"
+            aria-label="リスト表示"
+            className={`inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-sm transition-colors ${
+              viewMode === 'list'
+                ? 'bg-slate-800 text-white border-slate-800'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            📋
+          </button>
+          <button
+            onClick={() => {
+              setViewMode('grid')
+              localStorage.setItem('viewMode', 'grid')
+            }}
+            title="カード表示"
+            aria-label="カード表示"
+            className={`inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-sm transition-colors ${
+              viewMode === 'grid'
+                ? 'bg-slate-800 text-white border-slate-800'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            ⊞
+          </button>
         </div>
       </div>
 
