@@ -17,15 +17,22 @@ export default function OfferListPage() {
     const fetchOffers = async () => {
       try {
         // タグに 'aid_offer' を含む投稿のみ取得（公開中）
-        const { data, error } = await supabase
-          .from('hachijo_post_board')
-          .select('*')
-          .contains('tags', ['aid_offer'])
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
+        // DBに tags 列がない等の環境でも落ちないようフォールバック
+        const base = supabase.from('hachijo_post_board').select('*').eq('status', 'active')
+        const { data, error } = await base.contains('tags', ['aid_offer']).order('created_at', { ascending: false })
 
-        if (error) throw error
-        setPosts(data || [])
+        if (error) {
+          // フォールバック: 全件からクライアント側で絞り込み
+          const fb = await supabase
+            .from('hachijo_post_board')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+          const all = fb.data || []
+          setPosts(all.filter(p => Array.isArray(p.tags) && p.tags.includes('aid_offer')) as Post[])
+        } else {
+          setPosts((data || []) as Post[])
+        }
       } catch (e) {
         console.error('Failed to fetch offers:', e)
         setPosts([])
