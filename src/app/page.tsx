@@ -324,7 +324,7 @@ export default function HomePage() {
                           <h3 className="font-medium text-gray-900 text-sm leading-tight truncate flex-1">
                             {post.title}
                           </h3>
-{/* 報酬表示（災害支援投稿の場合は非表示） */}
+                          {/* 報酬表示（災害支援投稿の場合は非表示） */}
                           {!(() => {
                             const disasterCategories = ['tree_removal', 'water_supply', 'transportation', 'shopping', 'other']
                             const hasDisasterCategoryTag = post.tags && post.tags.some(tag => disasterCategories.includes(tag))
@@ -422,8 +422,8 @@ export default function HomePage() {
                   </div>
                 </div>
               </a>
-
-          ))}
+            )
+          })}
         </div>
       ) : (
         // カード表示（既存）

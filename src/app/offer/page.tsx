@@ -97,16 +97,16 @@ export default function OfferListPage() {
               return (
                 <Link key={post.id} href={`/post/${post.id}`} className="block">
                   <div className={`hover:bg-slate-50 transition-colors duration-200 cursor-pointer border-b border-slate-200 ${isLast ? 'border-b-0' : ''}`}>
-                    <div className="py-2 px-3">
+                    <div className="py-1.5 px-2">
                       <div className="flex gap-2">
                         <div className="flex-shrink-0">
                           {images.length > 0 ? (
-                            <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-slate-300 shadow-sm relative">
-                              <Image src={images[0]} alt={post.title} fill className="object-cover" sizes="64px" placeholder="blur" blurDataURL={BLUR_DATA_URL} />
+                            <div className="w-12 h-12 bg-slate-100 rounded-md overflow-hidden border border-slate-300 shadow-sm relative">
+                              <Image src={images[0]} alt={post.title} fill className="object-cover" sizes="48px" placeholder="blur" blurDataURL={BLUR_DATA_URL} />
                             </div>
                           ) : (
-                            <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center border-2 border-slate-300 shadow-sm">
-                              <span className="text-xl" aria-hidden>🎁</span>
+                            <div className="w-12 h-12 bg-slate-100 rounded-md flex items-center justify-center border border-slate-300 shadow-sm">
+                              <span className="text-base" aria-hidden>🎁</span>
                             </div>
                           )}
                         </div>
