@@ -290,9 +290,7 @@ export default function HomePage() {
             const m = (post.description || '').match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
             const area = m ? m[1] : null
             return (
-            <React.Fragment key={post.id}>
-
-              <a href={`/post/${post.id}`} className="block">
+              <a key={post.id} href={`/post/${post.id}`} className="block">
                 <div className={`hover:bg-slate-50 transition-colors duration-200 cursor-pointer border-b border-slate-200 ${index === filteredPosts.length - 1 ? 'border-b-0' : ''}`}>
                   <div className="py-1.5 px-2">
                     <div className="flex gap-2">
@@ -424,7 +422,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </a>
-            </React.Fragment>
+
           ))}
         </div>
       ) : (
