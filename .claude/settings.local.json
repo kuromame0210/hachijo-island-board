@@ -22,7 +22,9 @@
       "Bash(ls:*)",
       "Bash(psql:*)",
       "WebFetch(domain:www.8jo-saigai.com)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

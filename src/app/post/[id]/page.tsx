@@ -66,6 +66,24 @@ const advertisementCards: Post[] = [
 ]
 // ============================================================
 
+// 公開表示用に詳細住所をマスクするユーティリティ
+// 例: 「【場所】大賀郷 - ○○番地 …」→ 「【場所】大賀郷（詳細は管理画面のみ）」
+function maskDescriptionForPublic(desc: string): string {
+  if (!desc) return desc
+  const lines = desc.split('\n')
+  const masked = lines.map((line) => {
+    if (line.startsWith('【場所】')) {
+      const m = line.match(/^【場所】\s*([^-\n\r]+)(?:\s*-\s*.+)?/)
+      if (m) {
+        const area = m[1].trim()
+        return `【場所】${area}（詳細は管理画面のみ）`
+      }
+    }
+    return line
+  })
+  return masked.join('\n')
+}
+
 export default function PostDetail({ params }: { params: Promise<{ id: string }> }) {
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
@@ -227,7 +245,7 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
 
         <div className="prose max-w-none mb-8">
           <p className="whitespace-pre-wrap text-gray-700">
-            {post.description}
+            {isAdmin ? post.description : maskDescriptionForPublic(post.description)}
           </p>
         </div>
 
@@ -265,13 +283,13 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           )}
         </div>
 
-        {/* 地図表示 */}
-        {(post.map_link || post.iframe_embed) && (
+        {/* 地図表示（管理者のみ） */}
+        {isAdmin && (post.map_link || post.iframe_embed) && (
           <div className="mb-8">
-            <GoogleMapEmbed 
-              mapLink={post.map_link} 
+            <GoogleMapEmbed
+              mapLink={post.map_link}
               iframeEmbed={post.iframe_embed}
-              title="投稿の場所" 
+              title="投稿の場所"
             />
           </div>
         )}

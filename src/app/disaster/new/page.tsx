@@ -28,7 +28,7 @@ export default function NewDisasterPost() {
   const supportCategories = [
     { id: 'water_supply', label: '飲料水・生活用水の運搬' },
     { id: 'cleaning', label: 'ご自宅の掃除、片付け' },
-    { id: 'furniture_disposal', label: '家具、災害ゴミの搬出' },
+    { id: 'furniture_disposal', label: '家具、ゴミ出しの搬出' },
     { id: 'other', label: 'その他' }
   ]
 
@@ -255,7 +255,7 @@ export default function NewDisasterPost() {
           {/* 支援カテゴリ選択 */}
           <div className="mb-8">
             <label className="block text-lg font-medium text-gray-800 mb-4">
-              支援内容（台風22号・23号が対象です。） <span className="text-red-500">*</span>
+              支援内容 <span className="text-red-500">*</span>
             </label>
             <div className="space-y-3">
               {supportCategories.map((category) => (
