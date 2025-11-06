@@ -50,7 +50,7 @@ export default function RootLayout({
                 href="/offer"
                 className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
               >
-無償提供
+物資提供情報
               </Link>
               <Link
                 href="/location"
@@ -75,6 +75,14 @@ export default function RootLayout({
                 <span className="hidden lg:inline">🆘 リクエスト機能</span>
                 {/* 中画面: 短縮版 */}
                 <span className="inline lg:hidden">🆘 要請</span>
+              </Link>
+
+              <Link
+                href="/offer/new"
+                className="px-3 lg:px-4 py-2.5 text-xs lg:text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors shadow-md whitespace-nowrap"
+              >
+                <span className="hidden lg:inline">📦 物資掲載</span>
+                <span className="inline lg:hidden">📦 物資</span>
               </Link>
             </nav>
 

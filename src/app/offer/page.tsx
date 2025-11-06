@@ -40,8 +40,8 @@ export default function OfferListPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">無償提供（支援物資・サービス）</h1>
-        <p className="text-gray-600">支援物資の配布や、無償のサービス提供に関する情報を掲載します。公開はエリア名まで、詳細住所は記載しないでください（必要時は個別にご案内）。</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">物資提供情報</h1>
+        <p className="text-gray-600">支援物資の配布に関する情報を掲載します。公開はエリア名まで、詳細住所は記載しないでください（必要時は個別にご案内）。</p>
       </div>
 
       <div className="flex items-center justify-between mb-4">
@@ -50,7 +50,7 @@ export default function OfferListPage() {
           href="/offer/new"
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
         >
-          無償提供を掲載
+          物資掲載
         </Link>
       </div>
 
@@ -118,4 +118,3 @@ export default function OfferListPage() {
     </div>
   )
 }
-

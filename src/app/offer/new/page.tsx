@@ -193,7 +193,7 @@ export default function NewOfferPage() {
       <Card>
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">無償提供の掲載</h1>
+            <h1 className="text-2xl font-bold text-gray-900">物資掲載</h1>
             <Link href="/offer" className="text-sm text-gray-600 hover:underline">一覧に戻る</Link>
           </div>
 
@@ -289,4 +289,3 @@ export default function NewOfferPage() {
     </div>
   )
 }
-
