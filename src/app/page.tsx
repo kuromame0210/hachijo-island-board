@@ -285,30 +285,38 @@ export default function HomePage() {
       {viewMode === 'list' ? (
         // リスト表示
         <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden">
-          {filteredPosts.map((post, index) => (
+          {filteredPosts.map((post, index) => {
+            // 本文からエリア名を抽出（【場所】または【エリア】）
+            const extractArea = (text?: string): string | null => {
+              if (!text) return null
+              const m = text.match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
+              return m ? m[1] : null
+            }
+            const area = extractArea(post.description)
+            return (
             <React.Fragment key={post.id}>
 
               <a href={`/post/${post.id}`} className="block">
                 <div className={`hover:bg-slate-50 transition-colors duration-200 cursor-pointer border-b border-slate-200 ${index === filteredPosts.length - 1 ? 'border-b-0' : ''}`}>
-                  <div className="py-2 px-3">
+                  <div className="py-1.5 px-2">
                     <div className="flex gap-2">
                       {/* 画像/アイコン */}
                       <div className="flex-shrink-0">
                         {(post.images && post.images.length > 0) || post.image_url ? (
-                          <div className="w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-slate-300 shadow-sm relative">
+                          <div className="w-12 h-12 bg-slate-100 rounded-md overflow-hidden border border-slate-300 shadow-sm relative">
                             <Image
                               src={post.images && post.images.length > 0 ? post.images[0] : (post.image_url || '')}
                               alt={post.title}
                               fill
                               className="object-cover"
-                              sizes="64px"
+                              sizes="48px"
                               placeholder="blur"
                               blurDataURL={BLUR_DATA_URL}
                             />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center border-2 border-slate-300 shadow-sm">
-                            <span className="text-lg">
+                          <div className="w-12 h-12 bg-slate-100 rounded-md flex items-center justify-center border border-slate-300 shadow-sm">
+                            <span className="text-base">
                               {getCategoryIcon(post.category as CategoryKey)}
                             </span>
                           </div>
@@ -364,6 +372,12 @@ export default function HomePage() {
                         {/* 2行目: 説明 + 追加情報 */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {/* エリア（あれば優先表示） */}
+                            {area && (
+                              <span className="text-[10px] text-blue-700 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                {area}
+                              </span>
+                            )}
                             <p className="text-gray-600 text-xs truncate flex-1">
                               {post.description}
                             </p>

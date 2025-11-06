@@ -80,6 +80,12 @@ export default function OfferListPage() {
         viewMode === 'list' ? (
           <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden">
             {posts.map((post, index) => {
+              const extractArea = (text?: string): string | null => {
+                if (!text) return null
+                const m = text.match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
+                return m ? m[1] : null
+              }
+              const area = extractArea(post.description)
               const images = post.images && post.images.length > 0 ? post.images : (post.image_url ? [post.image_url] : [])
               const isLast = index === posts.length - 1
               const isGoods = (post.tags || []).includes('goods')
@@ -106,6 +112,7 @@ export default function OfferListPage() {
                             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">無償提供</span>
                             {isGoods && (<span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">物資配布</span>)}
                             {isService && (<span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">サービス提供</span>)}
+                            {area && (<span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">{area}</span>)}
                           </div>
                           <h3 className="font-semibold text-base text-gray-900 truncate">{post.title}</h3>
                           {post.description && (<p className="text-sm text-gray-600 line-clamp-2">{post.description}</p>)}
@@ -121,6 +128,12 @@ export default function OfferListPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {posts.map((post) => {
+              const extractArea = (text?: string): string | null => {
+                if (!text) return null
+                const m = text.match(/^[\u3010\[]?(?:場所|エリア)[\u3011\]]?\s*[:：]?\s*([^\s（\(\-\n\r]+)/m)
+                return m ? m[1] : null
+              }
+              const area = extractArea(post.description)
               const images = post.images && post.images.length > 0 ? post.images : (post.image_url ? [post.image_url] : [])
               const thumb = images[0]
               const isGoods = (post.tags || []).includes('goods')
@@ -140,6 +153,7 @@ export default function OfferListPage() {
                         <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">無償提供</span>
                         {isGoods && (<span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">物資</span>)}
                         {isService && (<span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">サービス</span>)}
+                        {area && (<span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">{area}</span>)}
                       </div>
                       <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">{post.title}</h3>
                     </div>
