@@ -104,17 +104,18 @@ export default function AdminPage() {
     }
   }
 
-  // 投稿一覧取得
+  // 投稿一覧取得（管理API経由でRLSをバイパス）
   const fetchPosts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('hachijo_post_board')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setPosts(data || [])
+      const statusParam = 'all' // まとめて取得し、UI側のフィルタで絞り込み
+      const res = await fetch(`/api/admin/posts?status=${statusParam}`, { cache: 'no-store' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || '管理APIからの取得に失敗しました')
+      }
+      const json = await res.json()
+      setPosts(json.posts || [])
     } catch (error) {
       console.error('投稿取得エラー:', error)
       setError('投稿の取得に失敗しました')
@@ -194,6 +195,27 @@ export default function AdminPage() {
     } catch (error) {
       console.error('ステータス更新エラー:', error)
       alert('ステータスの更新に失敗しました')
+    }
+  }
+
+  // 投稿の削除（管理API経由） - hidden状態でのみ表示想定
+  const deletePost = async (postId: string) => {
+    const confirmed = confirm(
+      'この投稿を削除しますか？\n\n※この操作は取り消せません。関連コメントも削除されます。'
+    )
+    if (!confirmed) return
+    try {
+      const res = await fetch(`/api/admin/posts/${postId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || '削除に失敗しました')
+      }
+      // ローカル状態から削除
+      setPosts(prev => prev.filter(p => p.id !== postId))
+      alert('投稿を削除しました')
+    } catch (error) {
+      console.error('投稿削除エラー:', error)
+      alert('投稿の削除に失敗しました')
     }
   }
 
@@ -499,6 +521,16 @@ export default function AdminPage() {
                     >
                       {post.status === 'active' ? '非表示' : '公開'}
                     </Button>
+                    {post.status === 'hidden' && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deletePost(post.id)}
+                        className="text-xs"
+                      >
+                        削除
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
