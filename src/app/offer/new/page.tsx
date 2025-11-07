@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
@@ -20,6 +20,9 @@ export default function NewOfferPage() {
   const [compressing, setCompressing] = useState(false)
   const [compressionError, setCompressionError] = useState<string | null>(null)
   const [compressionProgress, setCompressionProgress] = useState<{ completed: number; total: number } | null>(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [selectedForDelete, setSelectedForDelete] = useState<Set<number>>(new Set())
+  const addInputRef = useRef<HTMLInputElement>(null)
   const { locationResult, hasAskedPermission } = useLocation()
   const { canPost, isCurrentlyInIsland, hasRecentIslandAccess, lastIslandAccess } = useLocationAccess()
 
@@ -70,6 +73,10 @@ export default function NewOfferPage() {
         reader.onload = (ev) => setImagePreviews(prev => [...prev, ev.target?.result as string])
         reader.readAsDataURL(file)
       })
+      // 初回追加時にメインを0に固定
+      if (selectedImages.length === 0 && newImages.length > 0) {
+        setSelectedImageIndex(0)
+      }
     } catch (err) {
       console.error('画像圧縮エラー:', err)
       setCompressionError(err instanceof Error ? err.message : '画像の圧縮に失敗しました')
@@ -82,6 +89,87 @@ export default function NewOfferPage() {
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index))
     setImagePreviews(prev => prev.filter((_, i) => i !== index))
+    setSelectedForDelete(prev => {
+      const next = new Set(Array.from(prev).filter(i => i !== index).map(i => (i > index ? i - 1 : i)))
+      return next
+    })
+    if (selectedImageIndex === index) {
+      setSelectedImageIndex(0)
+    } else if (selectedImageIndex > index) {
+      setSelectedImageIndex(selectedImageIndex - 1)
+    }
+  }
+
+  const toggleSelectDelete = (index: number) => {
+    setSelectedForDelete(prev => {
+      const next = new Set(prev)
+      if (next.has(index)) next.delete(index); else next.add(index)
+      return next
+    })
+  }
+
+  const removeSelected = () => {
+    if (selectedForDelete.size === 0) return
+    const indices = Array.from(selectedForDelete).sort((a,b) => b - a)
+    let newImages = [...selectedImages]
+    let newPreviews = [...imagePreviews]
+    indices.forEach(i => {
+      newImages.splice(i,1)
+      newPreviews.splice(i,1)
+    })
+    setSelectedImages(newImages)
+    setImagePreviews(newPreviews)
+    setSelectedForDelete(new Set())
+    setSelectedImageIndex(0)
+  }
+
+  const setAsMain = (index: number) => {
+    if (index === 0) return
+    const imgs = [...selectedImages]
+    const prevs = [...imagePreviews]
+    const [img] = imgs.splice(index,1)
+    const [pv] = prevs.splice(index,1)
+    imgs.unshift(img)
+    prevs.unshift(pv)
+    setSelectedImages(imgs)
+    setImagePreviews(prevs)
+    setSelectedImageIndex(0)
+    // 再配置に伴い選択削除インデックスを再マップ
+    setSelectedForDelete(prev => {
+      const mapped = new Set<number>()
+      prev.forEach(i => {
+        let ni = i
+        if (i === index) return // もともとメインにするので選択解除
+        if (i < index) ni = i + 1
+        else if (i > index) ni = i
+        mapped.add(ni)
+      })
+      return mapped
+    })
+  }
+
+  const moveLeft = (index: number) => {
+    if (index <= 0) return
+    const imgs = [...selectedImages]
+    const prevs = [...imagePreviews]
+    ;[imgs[index-1], imgs[index]] = [imgs[index], imgs[index-1]]
+    ;[prevs[index-1], prevs[index]] = [prevs[index], prevs[index-1]]
+    setSelectedImages(imgs)
+    setImagePreviews(prevs)
+    if (selectedImageIndex === index) setSelectedImageIndex(index-1)
+    else if (selectedImageIndex === index-1) setSelectedImageIndex(index)
+  }
+
+  const moveRight = (index: number) => {
+    if (index >= selectedImages.length - 1) return
+    const imgs = [...selectedImages]
+    const prevs = [...imagePreviews]
+    ;[imgs[index+1], imgs[index]] = [imgs[index], imgs[index+1]]
+    ;[prevs[index+1], prevs[index]] = [prevs[index], prevs[index+1]]
+    setSelectedImages(imgs)
+    setImagePreviews(prevs)
+    if (selectedImageIndex === index) setSelectedImageIndex(index+1)
+    else if (selectedImageIndex === index+1) setSelectedImageIndex(index)
   }
 
   const uploadImages = async (): Promise<string[]> => {
@@ -244,7 +332,31 @@ export default function NewOfferPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">画像（最大5枚・任意）</label>
-            <Input type="file" accept="image/*" multiple onChange={handleImageSelect} disabled={compressing} />
+            {/* 初回のファイル選択 */}
+            {imagePreviews.length === 0 ? (
+              <Input type="file" accept="image/*" multiple onChange={handleImageSelect} disabled={compressing} />
+            ) : (
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-sm text-gray-600">{imagePreviews.length}/5枚</span>
+                <button
+                  type="button"
+                  onClick={() => addInputRef.current?.click()}
+                  className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  画像を追加
+                </button>
+                <input ref={addInputRef} type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
+                {selectedForDelete.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={removeSelected}
+                    className="px-3 py-1.5 text-xs rounded-md bg-red-600 text-white hover:bg-red-700"
+                  >
+                    選択削除（{selectedForDelete.size}）
+                  </button>
+                )}
+              </div>
+            )}
             {compressionError && (
               <p className="mt-2 text-sm text-red-600">{compressionError}</p>
             )}
@@ -254,10 +366,28 @@ export default function NewOfferPage() {
             {imagePreviews.length > 0 && (
               <div className="mt-3 grid grid-cols-3 md:grid-cols-5 gap-2">
                 {imagePreviews.map((src, idx) => (
-                  <div key={idx} className="relative">
+                  <div key={idx} className={`relative group ${idx===0 ? 'ring-2 ring-blue-500 rounded-md' : ''}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={src} alt={`preview-${idx}`} className="w-full h-24 object-cover rounded-md border" />
-                    <button type="button" onClick={()=>removeImage(idx)} className="absolute -top-2 -right-2 bg-white border rounded-full w-6 h-6 text-xs">×</button>
+                    {/* メインバッジ */}
+                    {idx === 0 && (
+                      <span className="absolute top-1 left-1 text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded">メイン</span>
+                    )}
+                    {/* 選択チェック */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSelectDelete(idx)}
+                      className={`absolute top-1 right-1 w-6 h-6 rounded-full border text-xs flex items-center justify-center ${selectedForDelete.has(idx) ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-700 border-gray-300'}`}
+                      title={selectedForDelete.has(idx) ? '選択解除' : '削除選択'}
+                    >
+                      {selectedForDelete.has(idx) ? '✓' : '×'}
+                    </button>
+                    {/* 並べ替え/メイン設定ボタン */}
+                    <div className="absolute inset-x-0 bottom-1 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                      <button type="button" onClick={()=>moveLeft(idx)} className="px-1.5 py-0.5 text-[11px] bg-white border rounded">←</button>
+                      <button type="button" onClick={()=>setAsMain(idx)} className="px-1.5 py-0.5 text-[11px] bg-blue-600 text-white rounded">メインに</button>
+                      <button type="button" onClick={()=>moveRight(idx)} className="px-1.5 py-0.5 text-[11px] bg-white border rounded">→</button>
+                    </div>
                   </div>
                 ))}
               </div>
