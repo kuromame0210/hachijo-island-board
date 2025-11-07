@@ -29,7 +29,7 @@ export default function AdminPage() {
   }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filter, setFilter] = useState<'all' | 'active' | 'hidden'>('all')
+  const [filter, setFilter] = useState<'all' | 'active' | 'hidden'>('active')
   const [activeTab, setActiveTab] = useState<'posts' | 'comments'>('posts')
 
   // 認証チェック
