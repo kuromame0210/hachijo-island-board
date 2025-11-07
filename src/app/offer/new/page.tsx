@@ -111,8 +111,8 @@ export default function NewOfferPage() {
   const removeSelected = () => {
     if (selectedForDelete.size === 0) return
     const indices = Array.from(selectedForDelete).sort((a,b) => b - a)
-    let newImages = [...selectedImages]
-    let newPreviews = [...imagePreviews]
+    const newImages = [...selectedImages]
+    const newPreviews = [...imagePreviews]
     indices.forEach(i => {
       newImages.splice(i,1)
       newPreviews.splice(i,1)
