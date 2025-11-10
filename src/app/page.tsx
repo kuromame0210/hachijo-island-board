@@ -18,6 +18,12 @@ import {
   getCategoryLabel,
   type CategoryKey
 } from '@/lib/categories'
+import {
+  getPostType,
+  getPostTypeIcon,
+  getPostTypeLabel,
+  getPostTypeBadgeColor
+} from '@/lib/postTypes'
 
 // カテゴリーバッジ用の軽い色バリエーション
 // 新しいカテゴリーを追加した場合は、ここにも色を追加してください
@@ -47,6 +53,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [statusFilter, setStatusFilter] = useState<'active' | 'all'>('active')
+  // ホームは支援リクエストのみ表示
+  const postTypeFilter = 'disaster_request'
   const [isAdmin, setIsAdmin] = useState(false)
   const [showPortalLinks, setShowPortalLinks] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -74,13 +82,19 @@ export default function HomePage() {
 
   // カテゴリフィルター無効化時の投稿リスト（島民以外は仕事カテゴリを除外）
   const filteredPosts = useMemo(() => {
+    let filtered = posts
+
     // 島民以外は仕事カテゴリを除外
     const isIslander = hasAskedPermission && locationResult.status === 'success' && locationResult.isInHachijo
     if (!isIslander) {
-      return posts.filter(post => post.category !== 'job')
+      filtered = filtered.filter(post => post.category !== 'job')
     }
-    return posts
-  }, [posts, hasAskedPermission, locationResult])
+
+    // 投稿タイプでフィルタリング（ホームは支援リクエストのみ）
+    filtered = filtered.filter(post => getPostType(post) === postTypeFilter)
+
+    return filtered
+  }, [posts, hasAskedPermission, locationResult, postTypeFilter])
 
   // 島民判定のメモ化
   const isIslander = useMemo(() => {
@@ -190,38 +204,11 @@ export default function HomePage() {
     <div>
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        {/* カテゴリーフィルター一時非表示（レコード数が少ないため） */}
-        {/* 
-        <div className="overflow-x-auto">
-          <div className="flex gap-2 min-w-max pb-2">
-            {categoriesForFilter.map(({ key, label }) => {
-            const isJobsRestricted = key === 'job' && !isIslander
-            const displayIcon = key === 'all' ? '' : getCategoryIcon(key as CategoryKey)
-
-            return (
-              <button
-                key={key}
-                onClick={() => handleCategoryClick(key)}
-                disabled={isJobsRestricted}
-                className={`px-5 py-3 rounded-lg transition-all text-sm font-medium relative shadow-sm whitespace-nowrap ${
-                  selectedCategory === key
-                    ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg transform scale-105'
-                    : isJobsRestricted
-                    ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'bg-white border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-                }`}
-                title={isJobsRestricted ? '仕事情報は島民限定です' : ''}
-              >
-                {displayIcon}{label}
-                {isJobsRestricted && (
-                  <span className="ml-1 text-xs">🔒</span>
-                )}
-              </button>
-            )
-          })}
-          </div>
+        {/* ページタイトル */}
+        <div>
+          <h1 className="text-2xl font-bold text-red-700">🆘 支援リクエスト</h1>
+          <p className="text-sm text-gray-600 mt-1">災害支援が必要な方からのリクエスト一覧</p>
         </div>
-        */}
 
         <div className="flex gap-2 items-center">
           {/* 表示モード切り替え（小型・アイコンのみ） */}
@@ -395,6 +382,19 @@ export default function HomePage() {
                             )}
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
+                            {/* 投稿タイプバッジ */}
+                            {(() => {
+                              const postType = getPostType(post)
+                              if (postType !== 'general') {
+                                return (
+                                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${getPostTypeBadgeColor(postType)}`}>
+                                    {getPostTypeIcon(postType)}{getPostTypeLabel(postType)}
+                                  </span>
+                                )
+                              }
+                              return null
+                            })()}
+                            {/* カテゴリバッジ */}
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getCategoryBadgeColor(post.category)}`}>
                               {getCategoryLabel(post.category as CategoryKey)}
                             </span>
@@ -472,7 +472,20 @@ export default function HomePage() {
                   )}
                   <div className="p-6 bg-gradient-to-b from-white to-slate-50">
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* 投稿タイプバッジ */}
+                        {(() => {
+                          const postType = getPostType(post)
+                          if (postType !== 'general') {
+                            return (
+                              <Badge className={`border ${getPostTypeBadgeColor(postType)}`}>
+                                {getPostTypeIcon(postType)}{getPostTypeLabel(postType)}
+                              </Badge>
+                            )
+                          }
+                          return null
+                        })()}
+                        {/* カテゴリバッジ */}
                         <Badge className={getCategoryBadgeColor(post.category)}>
                           {getCategoryLabel(post.category as CategoryKey)}
                         </Badge>

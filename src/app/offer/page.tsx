@@ -48,7 +48,7 @@ export default function OfferListPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">物資提供情報</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-green-700 mb-2">🎁 物資提供情報</h1>
         <p className="text-gray-600">支援物資の配布に関する情報を掲載します。公開はエリア名まで、詳細住所は記載しないでください（必要時は個別にご案内）。</p>
       </div>
 

@@ -45,13 +45,13 @@ export default function RootLayout({
                 href="/"
                 className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
               >
-ホーム
+🆘 支援リクエスト
               </Link>
               <Link
                 href="/offer"
                 className="px-4 py-2.5 text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
               >
-物資提供情報
+🎁 物資提供情報
               </Link>
               <Link
                 href="/location"
