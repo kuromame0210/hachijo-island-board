@@ -38,13 +38,14 @@ export default function NewOfferPage() {
   const [form, setForm] = useState({
     offerType: 'goods' as 'goods' | 'service',
     title: '',
-    district: '',
+    districts: [] as string[],
     timeWindow: '',
     details: '',
     remarks: '',
     name: '',
     phone: '',
-    email: ''
+    email: '',
+    contactPublic: false
   })
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,11 +196,15 @@ export default function NewOfferPage() {
       const images = await uploadImages()
 
       const offerTypeLabel = form.offerType === 'goods' ? '物資配布' : 'サービス提供'
+      const districtLabels = form.districts
+        .map(districtId => districts.find(d => d.id === districtId)?.label)
+        .filter(Boolean)
+        .join('、')
       // 公開本文（詳細住所は含めない）
       const description = [
         `【提供種別】${offerTypeLabel}`,
         form.details ? `【提供内容】${form.details}` : '',
-        form.district ? `【エリア】${districts.find(d => d.id === form.district)?.label}` : '',
+        districtLabels ? `【エリア】${districtLabels}` : '',
         form.timeWindow ? `【対応時間】${form.timeWindow}` : '',
         form.remarks ? `【備考】${form.remarks}` : '',
         '【お願い】住所等の詳細は本文・コメントに記載しないでください（必要時は個別にご案内）'
@@ -218,6 +223,7 @@ export default function NewOfferPage() {
         category: 'announcement',
         price: null,
         contact: contactText,
+        contact_public: form.contactPublic,
         images,
         image_url: images.length > 0 ? images[0] : null,
         status: 'active',
@@ -285,7 +291,7 @@ export default function NewOfferPage() {
             <Link href="/offer" className="text-sm text-gray-600 hover:underline">一覧に戻る</Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">提供種別</label>
               <div className="flex gap-3">
@@ -298,13 +304,26 @@ export default function NewOfferPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">エリア（地区）</label>
-              <select className="w-full border rounded-md px-3 py-2 text-sm" value={form.district} onChange={(e)=>setForm(f=>({...f,district:e.target.value}))}>
-                <option value="">選択してください</option>
+              <label className="block text-sm font-medium text-gray-700 mb-1">エリア（地区）（複数選択可）</label>
+              <div className="flex flex-wrap gap-3">
                 {districts.map(d => (
-                  <option key={d.id} value={d.id}>{d.label}</option>
+                  <label key={d.id} className="inline-flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      value={d.id}
+                      checked={form.districts.includes(d.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setForm(f => ({...f, districts: [...f.districts, d.id]}))
+                        } else {
+                          setForm(f => ({...f, districts: f.districts.filter(id => id !== d.id)}))
+                        }
+                      }}
+                    />
+                    {d.label}
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
 
@@ -407,6 +426,26 @@ export default function NewOfferPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス（任意）</label>
               <Input type="email" value={form.email} onChange={(e)=>setForm(f=>({...f,email:e.target.value}))} />
             </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.contactPublic}
+                onChange={(e) => setForm(f => ({...f, contactPublic: e.target.checked}))}
+                className="mt-1"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-900">
+                  連絡先（氏名・電話番号・メール）を公開する
+                </span>
+                <p className="text-xs text-gray-500 mt-1">
+                  チェックすると、投稿詳細ページで連絡先が表示されます。<br />
+                  チェックしない場合は、コメント機能でのみ連絡を受け付けます。
+                </p>
+              </div>
+            </label>
           </div>
 
           <div className="pt-2">

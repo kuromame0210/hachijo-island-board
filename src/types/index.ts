@@ -26,6 +26,8 @@ export interface Post {
   map_link?: string
   // iframe埋め込みコード
   iframe_embed?: string
+  // 連絡先公開フラグ
+  contact_public?: boolean  // true: 連絡先を公開、false: 非公開（コメントのみ）
   // TODO: 広告フラグ（未実装）
   // is_ad?: boolean  // データベースに is_ad カラムを追加後に有効化
 }

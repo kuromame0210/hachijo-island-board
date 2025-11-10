@@ -304,13 +304,31 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
           </div>
         )}
 
-        {/* 連絡先セクションを一時的に非表示 */}
-        {false && (
-          <div className="border-t border-gray-300 pt-6">
-            <h3 className="font-semibold mb-3">📞 連絡先</h3>
-            <p className="text-lg bg-blue-50 p-4 rounded-lg font-mono border border-blue-200">
-              {post?.contact}
+        {/* 連絡先セクション：contact_public が true の場合のみ表示 */}
+        {post.contact_public && post.contact && (
+          <div className="border-t border-gray-300 pt-6 mt-6">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              📞 連絡先
+            </h3>
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-base font-mono whitespace-pre-wrap">
+                {post.contact}
+              </p>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              ※ 投稿者が連絡先を公開しています
             </p>
+          </div>
+        )}
+
+        {/* 連絡先が非公開の場合の案内 */}
+        {!post.contact_public && (
+          <div className="border-t border-gray-300 pt-6 mt-6">
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <p className="text-sm text-yellow-800">
+                💬 連絡先は非公開です。下記のコメント機能でお問い合わせください。
+              </p>
+            </div>
           </div>
         )}
 
